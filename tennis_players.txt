@@ -130,7 +130,7 @@ Karol Kučera\1974\-\Slovakia\6\1998
 Yevgeny Kafelnikov\1974\-\Russia\1\1999 (6)
 Tim Henman\1974\-\Great Britain\4\2002
 Thomas Enqvist\1974\-\Sweden\4\1999
-Àlex Corretja\1974\-\Spain\2\1999
+Alex Corretja\1974\-\Spain\2\1999
 Franco Squillari\1975\-\Argentina\11\2000
 Marcelo Ríos\1975\-\Chile\1\1998 (6)
 Jiří Novák\1975\-\Czech Republic\5\2002
@@ -193,7 +193,7 @@ Andy Roddick\1982\-\United States\1\2003 (13)
 Tommy Robredo\1982\-\Spain\5\2006
 David Nalbandian\1982\-\Argentina\3\2006
 Paul-Henri Mathieu\1982\-\France\12\2008
-Łukasz Kubot\1982\-\Poland\-\-
+Lukasz Kubot\1982\-\Poland\-\-
 Joachim Johansson\1982\-\Sweden\9\2005
 Robby Ginepri\1982\-\United States\15\2005
 David Ferrer\1982\-\Spain\3\2013
@@ -289,13 +289,13 @@ Francisco Cerundolo\1998\-\Argentina\19\2023
 Denis Shapovalov\1999\-\Canada\10\2020
 Alex de Minaur\1999\-\Australia\9\2024
 Alejandro Davidovich Fokina\1999\-\Spain\21\2023
-Tomáš Macháč\2000\Czech Republic\25\2024
+Tomáš Macháč\2000\-\Czech Republic\25\2024
 Sebastian Korda\2000\-\United States\23\2023
 Sebastián Báez\2000\-\Argentina\18\2024
 Félix Auger-Aliassime\2000\-\Canada\6\2022
 Jannik Sinner\2001\-\Italy\1\2024 (46)
 Jiří Lehečka\2001\-\Czech Republic\23\2024
-Jack Draper\2001\Great Britain\15\2024
+Jack Draper\2001\-\Great Britain\15\2024
 Ben Shelton\2002\-\United States\13\2024
 Lorenzo Musetti\2002\-\Italy\15\2022
 Holger Rune\2003\-\Denmark\4\2023
