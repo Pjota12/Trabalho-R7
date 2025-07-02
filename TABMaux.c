@@ -46,24 +46,28 @@ void printFilhos(Tnode *node) {
     printf("\n");
 }
 
-void printIndexTotal(char *nomeArquivo) {
+void printIndexTotal(char *nomeArquivo, int T) {
     FILE *fp = fopen(nomeArquivo, "rb");
     if (fp == NULL) {
         printf("Erro ao abrir o arquivo %s.\n", nomeArquivo);
         exit(1);
     }
-
-    fseek(fp,sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o início
-    Tnode node;
+    
+    fseek(fp, 0, SEEK_END); // Move o ponteiro do arquivo para o final
+    long limite = ftell(fp);
+    fseek(fp, sizeof(int), SEEK_SET); // Pula o cabeçalho (raiz lógica)
     printf("PRINTANDO INDEX TOTAL:\n");
-    while (fread(&node, sizeof(Tnode), 1, fp) == 1) {
+
+    Tnode *node;
+    while (ftell(fp) < limite && (node = lerNo(fp, T)) != NULL) {
         printf("Nó:\n");
-        printf("isOcuped: %d\n", node.isOcuped);
-        printf("numKeys: %d\n", node.numKeys);
-        printChaves(&node);
-        printFilhos(&node);
+        printf("isOcuped: %d\n", node->isOcuped);
+        printf("numKeys: %d\n", node->numKeys);
+        printChaves(node);
+        printFilhos(node);
         printf("\n");
     }
+
     printf("Fim do arquivo.\n\n\n");
     fclose(fp);
 }
@@ -90,19 +94,26 @@ void printFolhaImpressa(char *nomeArquivoFolha, int nivel) {
 }
 
 //FUNÇÂO PARA CALCULAR O OFSET PARA INSERÇÃO DE NOVOS NÓS
-int calculaOfsetLogico(char *nomeArquivo){
+
+
+
+int calculaOfsetLogico(char *nomeArquivo,int T){
     FILE *fp = fopen(nomeArquivo, "rb");
     if (fp == NULL) {
         printf("Erro ao abrir o arquivo\n");
         exit(1);
     }
 
-    Tnode node;
+    fseek(fp, 0, SEEK_END); // Move o ponteiro do arquivo para o final
+    long limite = ftell(fp); // Obtém o tamanho do arquivo
+
+
+    Tnode *node; // Cria um novo nó para armazenar os dados lidos do arquivo
     fseek(fp, sizeof(int), SEEK_SET); // Pula o cabeçalho (raiz lógica)
     int offset = 0;
 
-    while (fread(&node, sizeof(Tnode), 1, fp) == 1) {
-        if (!node.isOcuped) {
+    while (ftell(fp) < limite && (node = lerNo(fp,T)) != NULL){ // Lê os nós do arquivo de índice
+        if (!node->isOcuped) {
             fclose(fp);
             return offset; // Retorna imediatamente o primeiro offset livre
         }
@@ -110,6 +121,7 @@ int calculaOfsetLogico(char *nomeArquivo){
     }
 
     fclose(fp);
+    liberaNo(node,T); // Libera a memória alocada para o nó
     return offset; // Se não achou nenhum livre, retorna o próximo disponível no final
 }
 
@@ -287,7 +299,6 @@ void inserirJogadorNaFolhaOrdenado(char *NomeArqFolha,Tplayer *novoJogador){
         printf("Jogador inserido na folha:%s com sucesso.\n",NomeArqFolha);
     }
 }
-
 
 Tplayer *buscaBinariaJogadorNaFolha(char *nomeArquivoFolha, char *idJogador) {
     printf("Buscando jogador com ID: %s na folha: %s\n", idJogador, nomeArquivoFolha);

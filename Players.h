@@ -11,6 +11,6 @@
 
 // void geradorIdJogador(char *id, int numeroJogador);
 
-void LerEscreverJogadoresArvore(char *nomeIndex, char *nomeArquivoJogadores, char *nomeArquivoCampeoes,int *numeroDeJogadores);
+void LerEscreverJogadoresArvore(char *nomeIndex, char *nomeArquivoJogadores, char *nomeArquivoCampeoes,int *numeroDeJogadores,int T);
 
 #endif // PLAYERS_H

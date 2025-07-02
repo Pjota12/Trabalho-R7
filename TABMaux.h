@@ -16,11 +16,11 @@ void printChaves(Tnode *node);
 
 void printFilhos(Tnode *node);
 
-void printIndexTotal(char *nomeArquivo);
+void printIndexTotal(char *nomeArquivo,int T);
 
 void printFolhaImpressa(char *nomeArquivoFolha, int nivel);
 
-int calculaOfsetLogico(char *nomeArquivo);
+int calculaOfsetLogico(char *nomeArquivo,int T);
 
 // Função para obter o número de folhas do arquivo de índice
 int getNumeroDeFolha(char*nomeArquivo);

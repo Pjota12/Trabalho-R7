@@ -8,7 +8,7 @@
 #define MAX_CHILDREN (2 * T) // Máximo de filhos em um nó
 #define MIN_CHILDREN (T) // Mínimo de filhos em um nós
 
-#define ID_SIZE 10
+#define ID_SIZE 13
 #define ARQ_SIZE 8
 
 
@@ -46,14 +46,22 @@
 6- ANO DO MELHOR RANKING (SE FOR PRIMEIRO NO RANK, TEMPO)
 */
 
+/*
+hash nome: nome->id;
+hash nacionalidade: nacionalidade->id
+hash rank 25;
+hash aposentados: id->id
+
+
+*/
 
 
 typedef struct node
 {
     int isValuesLeaf; //indica se os filhos são Arquivos ou nos      
     int numKeys;  // Número de chaves no nó
-    char keys[2*T][ID_SIZE];  //[12202020,21312312,1231312]
-    char filhos[2*T][ARQ_SIZE]; //[n1,n2,n3]
+    char keys[MAX_KEYS][ID_SIZE];  //[12202020,21312312,1231312]
+    char filhos[MAX_CHILDREN][ARQ_SIZE]; //[n1,n2,n3]
 }Tnode;
 
 typedef struct Player {

@@ -8,10 +8,11 @@
 
 int main(){
     int numeroDeJogadores = 0;
-    KillArvoreB();
-    InicializarIndex();
+    int T = 10;
+    //KillArvoreB(T);
+    InicializarIndex(T);
     THnome_inicializa("hash_nome.bin", "dados_nome.bin"); // Inicializa a tabela hash de nomes
-    LerEscreverJogadoresArvore("index.bin", "tennis_players.txt", "champions.txt",&numeroDeJogadores);
+    LerEscreverJogadoresArvore("index.bin", "tennis_players.txt", "champions.txt",&numeroDeJogadores, T); // Lê e escreve jogadores na árvore B+ e na tabela hash de nomes
     //Inicializa o índiceions
     //KillArvoreB();
     // printf("Inicializando o índice...\n");
@@ -66,9 +67,9 @@ int main(){
 
 
     // printf("\n\n\n\n\n");
-    printIndexTotal("index.bin");
-    imprimirArvoreB();
-    THnome_imprime("hash_nome.bin", "dados_nome.bin", TAM_HASH); // Imprime a tabela hash de nomes
+    printIndexTotal("index.bin",T);
+    imprimirArvoreB(T);
+    //THnome_imprime("hash_nome.bin", "dados_nome.bin", TAM_HASH); // Imprime a tabela hash de nomes
     printf("Número total de jogadores inseridos: %d\n", numeroDeJogadores);
     // //Exemplo de busca de jogadores
     // Tplayer *buscado1 = buscarJogador("2", 0);

@@ -94,7 +94,7 @@ void preencherCampeoes(Tplayer *jogador, char *nomeArquivoCampeoes) {
 }
 
 
-void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char *nomeArquivoCampeoes,int *numeroDeJogadores) {
+void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char *nomeArquivoCampeoes,int *numeroDeJogadores,int T) {
     FILE *fp = fopen(nomeArquivoJogadores, "r");
     if (fp == NULL) {
         printf("Erro ao abrir o arquivo de jogadores.\n");
@@ -172,7 +172,7 @@ void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char 
         printf("]\n");
         
         // Insere o jogador na árvore
-        InsereJogador(nomeIndex, &j,0,0); // Insere o jogador na árvore B
+        InsereJogador(nomeIndex, &j,0,0,T); // Insere o jogador na árvore B
 
         // Insere o jogador na tabela hash de nomes
         THnome_insere("hash_nome.bin", "dados_nome.bin",j.nome,j.id);

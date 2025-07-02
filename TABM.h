@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define T 10 // Grau mínimo da árvore B
-#define MAX_KEYS (2 * T - 1) // Máximo de chaves em um nó
-#define MIN_KEYS (T - 1) // Mínimo de chaves em um nó
-#define MAX_CHILDREN (2 * T) // Máximo de filhos em um nó
-#define MIN_CHILDREN (T) // Mínimo de filhos em um nós
+// #define T 10 // Grau mínimo da árvore B
+// #define MAX_KEYS (2 * T - 1) // Máximo de chaves em um nó
+// #define MIN_KEYS (T - 1) // Mínimo de chaves em um nó
+// #define MAX_CHILDREN (2 * T) // Máximo de filhos em um nó
+// #define MIN_CHILDREN (T) // Mínimo de filhos em um nós
 
 #define ID_SIZE 13
 #define ARQ_SIZE 11
@@ -22,8 +22,8 @@
 typedef struct node{
     int isOcuped; //indica se o no esta com ocupado     
     int numKeys;  // Número de chaves no nó
-    char keys[MAX_KEYS][ID_SIZE];  //[12202020,21312312,1231312]
-    char filhos[MAX_CHILDREN][ARQ_SIZE]; //[n1,n2,n3]
+    char **keys;  //[12202020,21312312,1231312]
+    char **filhos; //[n1,n2,n3]
 }Tnode;
 
 typedef struct player {
@@ -41,14 +41,26 @@ typedef struct player {
 
 // void criarIndex(char *arquivoJogadores, char *arquivoCampeoes);
 
-void InicializarIndex();
+//Biblioteca de funções auxiliares para Tnode
+Tnode* criaNo(int T);
 
-void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai);
+void liberaNo(Tnode *no, int T);
 
-Tplayer* buscarJogador(char *id,int n);
+void salvarNo(FILE *fi, Tnode *node, int T);
 
-void imprimirArvoreB();
+Tnode* lerNo(FILE *fi, int T);
 
-void KillArvoreB();
+int tamanhoNo(int T);
+
+// Funções auxiliares para manipulação da árvore B+
+void InicializarIndex(int T);
+
+void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai,int T);
+
+Tplayer* buscarJogador(char *id,int n,int T);
+
+void imprimirArvoreB(int T);
+
+void KillArvoreB(int T);
 
 #endif // TABM_H

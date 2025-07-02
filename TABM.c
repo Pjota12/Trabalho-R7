@@ -16,10 +16,83 @@
 //-> Tplayer jogador[MAX_KEYS]             |
     //-> char proximaFolha[ARQ_SIZE]       |
 
+//FUNÇÕES AUXILIARES PARA TNODE
+Tnode* criaNo(int T) {
+    Tnode *no = malloc(sizeof(Tnode));
+    no->isOcuped = 1;
+    no->numKeys = 0;
+
+    no->keys = malloc(sizeof(char*) * (2 * T - 1));
+    for (int i = 0; i < (2 * T - 1); i++) {
+        no->keys[i] = calloc(ID_SIZE, sizeof(char));
+    }
+
+    no->filhos = malloc(sizeof(char*) * (2 * T));
+    for (int i = 0; i < (2 * T); i++) {
+        no->filhos[i] = calloc(ARQ_SIZE, sizeof(char));
+    }
+
+    return no;
+}
+
+void liberaNo(Tnode *no, int T) {
+    for (int i = 0; i < (2 * T - 1); i++) free(no->keys[i]);
+    for (int i = 0; i < (2 * T); i++) free(no->filhos[i]);
+    free(no->keys);
+    free(no->filhos);
+    free(no);
+}
+
+void salvarNo(FILE *fi, Tnode *node, int T) {
+    // Salva campos primitivos
+    fwrite(&node->isOcuped, sizeof(int), 1, fi);
+    fwrite(&node->numKeys, sizeof(int), 1, fi);
+
+    // Salva as chaves
+    for (int i = 0; i < 2 * T - 1; i++) {
+        fwrite(node->keys[i], sizeof(char), ID_SIZE, fi);
+    }
+
+    // Salva os filhos
+    for (int i = 0; i < 2 * T; i++) {
+        fwrite(node->filhos[i], sizeof(char), ARQ_SIZE, fi);
+    }
+}
+
+Tnode* lerNo(FILE *fi, int T) {
+    Tnode *node = criaNo(T);
+    if (fread(&node->isOcuped, sizeof(int), 1, fi) != 1 ||
+        fread(&node->numKeys, sizeof(int), 1, fi) != 1) {
+        printf("Erro ao ler os campos primitivos do nó.\n");
+        return NULL;
+    }
+
+    for (int i = 0; i < 2 * T - 1; i++) {
+        if (fread(node->keys[i], sizeof(char), ID_SIZE, fi) != ID_SIZE) {
+            printf("Erro ao ler as chaves do nó.\n");
+            return NULL;
+        }
+    }
+
+    for (int i = 0; i < 2 * T; i++) {
+        if (fread(node->filhos[i], sizeof(char), ARQ_SIZE, fi) != ARQ_SIZE) {
+            printf("Erro ao ler os filhos do nó.\n");
+            return NULL;
+        }
+    }
+
+    return node;
+}
+
+int tamanhoNo(int T) {
+    // Calcula o tamanho do nó em bytes
+    return sizeof(int) * 2 + (2 * T - 1) * ID_SIZE + (2 * T) * ARQ_SIZE;
+}
+
 //FUNÇÕES PARA CRIAR O ARQUIVO DE ÍNDICE E INICIALIZAR A ÁRVORE B+
 //----------------------------------------------------------------------------------------------------------------------------------
 // Cria o arquivo de índice e o primeiro nó da árvore B+ com o numero de chaves = 0 e um main Index com raizIndex = 0 e numLeaf = 0
-void InicializarIndex(){
+void InicializarIndex(int T){
     FILE *fi = fopen("index.bin", "wb"); // Abre o arquivo de índice para escrita
     if (fi == NULL) {
         printf("Erro ao criar o arquivo de índice.\n");
@@ -27,8 +100,8 @@ void InicializarIndex(){
     }
     printf("Arquivo de índice criado com sucesso.\n");
 
-
-    Tnode *node = malloc(sizeof(Tnode));
+    //cria o nó raiz da árvore B+
+    Tnode *node = criaNo(T);
     if(!node){
         printf("Erro ao alocar memória para o nó.\n");
         fclose(fi);
@@ -44,7 +117,7 @@ void InicializarIndex(){
     if (ffolha == NULL) {
         printf("Erro ao criar o arquivo do nó.\n");
         fclose(fi);
-        free(node);
+        liberaNo(node, T); // Libera a memória alocada para o nó
         exit(1);
     }
     printf("Arquivo de leaf00.bin criado com sucesso.\n");
@@ -56,11 +129,16 @@ void InicializarIndex(){
     //Setando os valores iniciais do nó:
     node->isOcuped = 1;
     // node->isValuesLeaf = 1;
-    node->numKeys = 0; // Inicializa o número de chaves como 0
-    for (int j = 0; j < MAX_KEYS; j++) {
+    node->numKeys = 0; 
+    
+
+    // Inicializa o número de chaves como 0
+    for (int j = 0; j < ((2*T)-1); j++) {
         strcpy(node->keys[j], ""); // Inicializa as chaves como strings vazias
     }
-    for (int j = 0; j < MAX_CHILDREN; j++) {
+
+    // Inicializa os filhos do nó: 2*T FILHOS MAXIMO
+    for (int j = 0; j < 2*T; j++) {
         if(j == 0) {
             strcpy(node->filhos[j], "leaf00.bin"); // O primeiro filho aponta para o próprio nó
         } else {
@@ -69,9 +147,10 @@ void InicializarIndex(){
     }
 
     // Escrevendo o nó no arquivo:
-    fwrite(node, sizeof(Tnode), 1, fi); // Escreve o nó no arquivo de índice
+    fseek(fi, sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o início do nó
+    salvarNo(fi, node, T); // Salva o nó no arquivo da folha
 
-    free(node); // Libera a memória alocada para o nó
+    liberaNo(node, T); // Libera a memória alocada para o nó
     fclose(ffolha); // Fecha o arquivo do nó
 
     fclose(fi); // Fecha o arquivo após a criação
@@ -85,7 +164,7 @@ void InicializarIndex(){
 //----------------------------------------------------------------------------------------------------------------------------------
 
 // Função para dividir uma folha quando ela está cheia
-void DivideFolha(char *folha,char *Novafolha,char *id){
+void DivideFolha(char *folha,char *Novafolha,char *id,int T){
     FILE *ff = fopen(folha,"rb");
     if(!ff){
         printf("Erro ao abrir o arquivo Folha");
@@ -93,7 +172,7 @@ void DivideFolha(char *folha,char *Novafolha,char *id){
     }
 
     int numeroFolhas = getNumeroDeFolha("index.bin");//PEGA O NUMERO DE FOLHAS EXISTENTE
-    int metade = MAX_KEYS/2;
+    int metade = (2 * T - 1)/2;
 
     Tplayer *player = malloc(sizeof(Tplayer));
     fseek(ff,metade*sizeof(Tplayer),SEEK_SET);
@@ -152,47 +231,41 @@ void DivideFolha(char *folha,char *Novafolha,char *id){
 }
 
 // Função para inserir um nó dividido no arquivo de índice
-int insereNo(char *nomeArqIndex,Tnode *noDividido){
+int insereNo(char *nomeArqIndex,Tnode *noDividido,int T){
     FILE *fi = fopen(nomeArqIndex,"rb+");
     if(!fi){
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
-
-    int ofsetLogico = calculaOfsetLogico(nomeArqIndex); 
+    printf("ENTREI NO OFSETLOGICO");
+    int ofsetLogico = calculaOfsetLogico(nomeArqIndex,T); 
     printf("ofsetLogico calculado: %d\n", ofsetLogico);
-    fseek(fi, ofsetLogico * sizeof(Tnode) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó correspondente
-    fwrite(noDividido, sizeof(Tnode), 1, fi); // Escreve o nó no arquivo
+    fseek(fi, ofsetLogico * tamanhoNo(T) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó correspondente
+    salvarNo(fi, noDividido,T); // Salva o nó no arquivo de índice
 
     fclose(fi);
     return ofsetLogico; // Retorna o ofset lógico do nó inserido
 }
 
 // Função para dividir um nó quando ele está cheio (NÃO ESQUECER DE ATUALIZAR O NO DIVIDIDO NO ARQUIVO DE ÍNDICE)
-void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n){
-    FILE *fi = fopen(nomeArqIndex,"rb+");
-    if(!fi){
-        printf("Erro ao abrir o arquivo de índice.\n");
-        exit(1);
-    }
-
-
-    int metadeKeys = MAX_KEYS / 2;
-    int metadeFilhos = MAX_CHILDREN / 2;
+void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n,int T){
+    int metadeKeys = (2*T - 1) / 2; // Divide o número de chaves pela metade
+    int metadeFilhos = (2 * T) / 2; // Divide o número de filhos pela metade
 
 
     // Cria um novo nó para armazenar as chaves e filhos divididos
-    Tnode *FilhoMenor = malloc(sizeof(Tnode));
-    Tnode *FilhoMaior = malloc(sizeof(Tnode));
+    Tnode *FilhoMenor = criaNo(T); // Cria um novo nó para o filho menor
+    Tnode *FilhoMaior = criaNo(T); // Cria um novo nó para o filho maior
+    // Inicializa o novo nó FilhoMaior  
 
     if(!FilhoMaior || !FilhoMenor){
         printf("Erro ao alocar memória para o novo nó.\n");
-        fclose(fi);
         exit(1);
     }
 
     char chavePromovida[ID_SIZE];
     strcpy(chavePromovida, noDividido->keys[metadeKeys]);
+    printf("Chave promovida: %s\n", chavePromovida); // Imprime a chave promovida
 
 
     // Inicializa o novo nó FilhoMenor---------------------------
@@ -205,12 +278,13 @@ void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n){
 
     for (int i = 0; i < metadeFilhos; i++) strcpy(FilhoMenor->filhos[i], noDividido->filhos[i]); // Copia os filhos para o novo nó
 
-    int ofsetFilhoMenor = insereNo(nomeArqIndex, FilhoMenor); // Insere o novo nó no arquivo de índice
+    printf("inserindo no index");
+    int ofsetFilhoMenor = insereNo(nomeArqIndex, FilhoMenor,T); // Insere o novo nó no arquivo de índice
     printf("ofset filho menor: %d\n",ofsetFilhoMenor);
     printf("numKeys do FilhoMenor: %d\n", FilhoMenor->numKeys);
     printChaves(FilhoMenor); // Imprime as chaves do nó FilhoMenor
     printFilhos(FilhoMenor); // Imprime os filhos do nó FilhoMenor
-    free(FilhoMenor); // Libera a memória alocada para o nó FilhoMenor
+    liberaNo(FilhoMenor,T); // Libera a memória alocada para o nó FilhoMenor
     //-------------------------------------------------------------
 
 
@@ -228,12 +302,12 @@ void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n){
     // Copia os filhos para o novo nó
     for (int i = 0; i < metadeFilhos; i++) strcpy(FilhoMaior->filhos[i], noDividido->filhos[i + metadeFilhos]); 
 
-    int ofsetFilhoMaior = insereNo(nomeArqIndex, FilhoMaior); // Insere o novo nó no arquivo de índice
+    int ofsetFilhoMaior = insereNo(nomeArqIndex, FilhoMaior,T); // Insere o novo nó no arquivo de índice
     printf("ofsetFilhoMaior: %d\n",ofsetFilhoMaior);
     printf("numKeys do FilhoMenor: %d\n", FilhoMenor->numKeys);
     printChaves(FilhoMaior); // Imprime as chaves do nó FilhoMaior
     printFilhos(FilhoMaior); // Imprime os filhos do nó FilhoMaior
-    free(FilhoMaior); // Libera a memória alocada para o nó FilhoMaior
+    liberaNo(FilhoMaior,T); // Libera a memória alocada para o nó FilhoMaior
     //-------------------------------------------------------------
 
 
@@ -253,38 +327,40 @@ void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n){
     strcpy(noDividido->filhos[1], ""); // Limpa o segundo
     sprintf(noDividido->filhos[1], "%d", ofsetFilhoMaior); // Define o segundo filho como o ofset do novo nó FilhoMaior
     //----------------------------------------------------------------
-    // Atualiza o no raiz
-    fseek(fi, n * sizeof(Tnode) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
-    fwrite(noDividido, sizeof(Tnode), 1, fi); // Escre
-    fclose(fi); // Fecha o arquivo de índice
-    printf("ARQUIVO NO FINAL DO DIVIDE:\n");
-    printIndexTotal("index.bin");
-}
 
-// Função para dividir um no interno da arvore e subir a chave promovida para o pai
-int DivideNoInterno(char *nomeArqIndex,char *chavePromovida,char *playerId,Tnode *noDividido,int atual, int *OfsetProximoNo){
+    // Atualiza o arquivo de índice com o nó dividido
     FILE *fi = fopen(nomeArqIndex,"rb+");
     if(!fi){
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
+    // Atualiza o no raiz
+    fseek(fi, n * tamanhoNo(T) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
+    salvarNo(fi, noDividido,T); // Salva o nó dividido no arquivo de índice
+    fclose(fi); // Fecha o arquivo de índice
+    printf("ARQUIVO NO FINAL DO DIVIDE:\n");
+    
+}
+
+// Função para dividir um no interno da arvore e subir a chave promovida para o pai
+int DivideNoInterno(char *nomeArqIndex,char *chavePromovida,char *playerId,Tnode *noDividido,int atual, int *OfsetProximoNo,int T){
 
     // Pego as referencias
-    int metadeKeys = MAX_KEYS / 2;
-    int metadeFilhos = MAX_CHILDREN / 2;
+    int metadeKeys = (T*2-1) / 2;
+    int metadeFilhos = (2*T) / 2;
 
 
     // Cria um novo nó para armazenar as chaves e filhos divididos
-    Tnode *FilhoMaior = malloc(sizeof(Tnode));
-
+    Tnode *FilhoMaior = criaNo(T); // Cria um novo nó para o filho maior
+    printf("no criado para FilhoMaior\n");
     if(!FilhoMaior){
         printf("Erro ao alocar memória para o novo nó.\n");
-        fclose(fi);
         exit(1);
     }
 
     //pego a chave do meio que será promovida
     strcpy(chavePromovida, noDividido->keys[metadeKeys]);
+    printf("Chave promovida: %s\n", chavePromovida); // Imprime a chave promovida
 
     // Inicializa o novo nó FilhoMaior----------------------------
     FilhoMaior->isOcuped = 1; // Marca como ocupado
@@ -297,12 +373,12 @@ int DivideNoInterno(char *nomeArqIndex,char *chavePromovida,char *playerId,Tnode
     // Copia os filhos para o novo nó
     for (int i = 0; i < metadeFilhos; i++) strcpy(FilhoMaior->filhos[i], noDividido->filhos[i + metadeFilhos]); 
 
-    int OfsetFilhoMaior = insereNo(nomeArqIndex, FilhoMaior); // Insere o novo nó no arquivo de índice
+    int OfsetFilhoMaior = insereNo(nomeArqIndex, FilhoMaior,T); // Insere o novo nó no arquivo de índice
     printf("ofsetFilhoMaior: %d\n",OfsetFilhoMaior);
     printf("numKeys do FilhoMenor: %d\n", FilhoMaior->numKeys);
     printChaves(FilhoMaior); // Imprime as chaves do nó FilhoMaior
     printFilhos(FilhoMaior); // Imprime os filhos do nó FilhoMaior
-    free(FilhoMaior); // Libera a memória alocada para o nó FilhoMaior
+    liberaNo(FilhoMaior,T); // Libera a memória alocada para o nó FilhoMaior
     //-------------------------------------------------------------
 
     //Para a recursão funcionar, preciso saber qual nó filho ira a proxima pesquisa
@@ -312,33 +388,33 @@ int DivideNoInterno(char *nomeArqIndex,char *chavePromovida,char *playerId,Tnode
     if(i < metadeKeys) *OfsetProximoNo = atual; // Se a posição for menor que metade, o nó atual permanece
     else *OfsetProximoNo = OfsetFilhoMaior; // Caso contrário, o próximo nó será o filho maior
 
-    //tranforma dividido em filho
-    noDividido->numKeys = metadeKeys; // Define o número de chaves como metade
-    fseek(fi, atual * sizeof(Tnode) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
-    fwrite(noDividido, sizeof(Tnode), 1, fi); // Escreve o nó atualizado no arquivo de índice
 
-    fclose(fi); // Fecha o arquivo de índice
-    return OfsetFilhoMaior; // Retorna o ofset lógico do nó maior criado}
-}
-
-//função para atualizar o nó pai com a chave promovida e o ofset do filho maior
-void AtualizaPai(char *nomeArqIndex,char *chavePromovida,int filhoMaior,int indicePai){
     FILE *fi = fopen(nomeArqIndex,"rb+");
     if(!fi){
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
 
-    Tnode *node = malloc(sizeof(Tnode));
-    if(!node){
-        printf("Erro ao alocar memória para o nó.\n");
-        fclose(fi);
+    //tranforma dividido em filho
+    noDividido->numKeys = metadeKeys; // Define o número de chaves como metade
+    fseek(fi, atual * tamanhoNo(T) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
+    salvarNo(fi, noDividido,T); // Salva o nó dividido no arquivo de índice
+
+    fclose(fi); // Fecha o arquivo de índice
+    return OfsetFilhoMaior; // Retorna o ofset lógico do nó maior criado}
+}
+
+//função para atualizar o nó pai com a chave promovida e o ofset do filho maior
+void AtualizaPai(char *nomeArqIndex,char *chavePromovida,int filhoMaior,int indicePai,int T){
+    FILE *fi = fopen(nomeArqIndex,"rb+");
+    if(!fi){
+        printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
 
 
-    fseek(fi, indicePai*sizeof(Tnode)+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó pai
-    fread(node,sizeof(Tnode),1, fi); // Lê o nó pai do arquivo
+    fseek(fi, indicePai*tamanhoNo(T)+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó pai
+    Tnode *node = lerNo(fi,T); // Lê o nó pai do arquivo de índice
 
     printf("Atualizando pai no indice %d:\n", indicePai);
     printChaves(node);
@@ -363,63 +439,61 @@ void AtualizaPai(char *nomeArqIndex,char *chavePromovida,int filhoMaior,int indi
     printChaves(node);
     printFilhos(node);
 
-    fseek(fi,indicePai*sizeof(Tnode)+sizeof(int), SEEK_SET);
-    fwrite(node, sizeof(Tnode), 1, fi); // Escreve o nó atualizado no arquivo de índice
+    fseek(fi,indicePai*tamanhoNo(T)+sizeof(int), SEEK_SET);
+    salvarNo(fi, node,T); // Salva o nó pai atualizado no arquivo de índice
 
-    free(node); // Libera a memória alocada para o nó
+    liberaNo(node,T); // Libera a memória alocada para o nó pai
     fclose(fi); // Fecha o arquivo de índice
     return;
 }
 
 // Função para inserir um novo jogador na árvore B+ em MS
-void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
+void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai,int T){
     FILE *fi = fopen(nomeArqIndex,"rb+");
     if(!fi){
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
 
-    Tnode *node = malloc(sizeof(Tnode));
-    if(!node){
-        printf("Erro ao alocar memória para o nó.\n");
-        fclose(fi);
-        exit(1);
-    }
 
-    fseek(fi, atual*sizeof(Tnode)+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o início
-    fread(node,sizeof(Tnode),1, fi); // Lê o primeiro nó (raiz) do arquivo
+    fseek(fi, atual*tamanhoNo(T)+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o início
+    Tnode *node = lerNo(fi,T); // Lê o nó atual do arquivo de índice
 
     int i = 0;
 
     //VERIFICA SE O NO ESTA CHEIO DE CHAVES
-    if(node->numKeys == MAX_KEYS) { // Verifica se o nó está cheio
-        printf("Nó cheio, dividindo...\n");
+    if(node->numKeys == 2*T-1) { // Verifica se o nó está cheio
         if(atual == 0){
-            DivideNoRaiz(nomeArqIndex,node,atual); // Divide o nó raiz se for o nó atual
-        
+            printf("Nó raiz cheio, dividindo...\n");
+            fclose(fi); // Fecha o arquivo de índice
+            DivideNoRaiz(nomeArqIndex,node,atual,T); // Divide o nó raiz se for o nó atual
+            liberaNo(node,T); // Libera a memória alocada para o nó
+            InsereJogador(nomeArqIndex, novoJogador, 0,Pai,T); // Chama a função recursivamente para inserir o jogador novamente na raiz
+            return; // Retorna após inserir o jogador na raiz
         }else{
+            printf("Nó interno cheio, dividindo...\n");
             char *chavePromovida = malloc(ID_SIZE * sizeof(char));
             if(!chavePromovida){
                 printf("Erro ao alocar memória para a chave promovida.\n");
-                free(node);
+                liberaNo(node,T);
                 fclose(fi);
                 exit(1);
             }
+            fclose(fi); // Fecha o arquivo de índice
             int ofsetProximoNo = 0;
-            int ofsetFilhoMaior = DivideNoInterno(nomeArqIndex,chavePromovida,novoJogador->id,node,atual,&ofsetProximoNo); // Divide o nó interno se não for a raiz
+            int ofsetFilhoMaior = DivideNoInterno(nomeArqIndex,chavePromovida,novoJogador->id,node,atual,&ofsetProximoNo,T); // Divide o nó interno se não for a raiz
             printf("ofset Atual do nó: %d\n", atual);
-            AtualizaPai(nomeArqIndex,chavePromovida,ofsetFilhoMaior,Pai); // Atualiza o nó pai com a chave promovida e o ofset do filho maior
+            AtualizaPai(nomeArqIndex,chavePromovida,ofsetFilhoMaior,Pai,T); // Atualiza o nó pai com a chave promovida e o ofset do filho maior
             printf("ofset do filho maior: %d\n",ofsetFilhoMaior);
             free(chavePromovida); // Libera a memória alocada para o nó
-            free(node); // Libera a memória alocada para o nó
-            fclose(fi); // Fecha o arquivo de índice
-            InsereJogador(nomeArqIndex, novoJogador, ofsetProximoNo,Pai); // Chama a função recursivamente para inserir o jogador novamente
+            liberaNo(node,T); // Libera a memória alocada para o nó
+            InsereJogador(nomeArqIndex, novoJogador, ofsetProximoNo,Pai,T); // Chama a função recursivamente para inserir o jogador novamente
             return; // Retorna após inserir o jogador na folha
         }
         printf("Nó dividido com sucesso.\n");
-        free(node); // Libera a memória alocada para o nó
+        liberaNo(node,T); // Libera a memória alocada para o nó
         fclose(fi); // Fecha o arquivo de índice
-        InsereJogador(nomeArqIndex, novoJogador, atual,Pai); // Chama a função recursivamente para inserir o jogador novamente
+        InsereJogador(nomeArqIndex, novoJogador, atual,Pai,T); // Chama a função recursivamente para inserir o jogador novamente
         return; // Retorna após inserir o jogador na folha
     }
 
@@ -431,7 +505,7 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
         printf("nome do arquivo da folha: %s\n", node->filhos[i]);
         if(buscaBinariaJogadorNaFolha(node->filhos[i], novoJogador->id)) { // Verifica se o jogador já existe na folha
             printf("Jogador com ID %s já existe na folha.\n", novoJogador->id);
-            free(node); // Libera a memória alocada para o nó
+            liberaNo(node,T); // Libera a memória alocada para o nó
             fclose(fi); // Fecha o arquivo de índice
             return; // Retorna sem inserir o jogador
         }
@@ -439,11 +513,11 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
         int quantidadeElementos = contaElementosFolha(node->filhos[i]); // Conta o número de elementos na folha
 
         //CASO A FOLHA ESTEJA CHEIA -----------------------------------------------------------------------
-        if(quantidadeElementos == MAX_KEYS){
+        if(quantidadeElementos == (2 * T - 1)){
             printf("Folha %s cheia, dividindo...\n",node->filhos[i]);
             char novaFolha[ARQ_SIZE];
             char idPromovido[ID_SIZE];
-            DivideFolha(node->filhos[i], novaFolha,idPromovido) ; // Divide a folha se estiver cheia
+            DivideFolha(node->filhos[i], novaFolha,idPromovido,T) ; // Divide a folha se estiver cheia
             printf("folha %s dividida com sucesso!! criada %s\n",node->filhos[i],novaFolha);
             // Insere o novo jogador na folha dividida
             if(strcmp(novoJogador->id, idPromovido) < 0)
@@ -460,11 +534,11 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
             node->numKeys++; // Incrementa o número de chaves no nó
             strcpy(node->keys[i], idPromovido); // Insere o ID do novo
             strcpy(node->filhos[i+1], novaFolha); // Insere o nome da nova folha no filho correspondente
-            fseek(fi,atual*sizeof(Tnode)+sizeof(int), SEEK_SET);
+            fseek(fi,atual*tamanhoNo(T)+sizeof(int), SEEK_SET);
             printChaves(node); // Imprime as chaves do nó para depuração
             printFilhos(node); // Imprime os filhos do nó para depuração
-            fwrite(node, sizeof(Tnode), 1, fi); // Escreve o nó atualizado no arquivo
-            free(node); // Libera a memória alocada para o nó
+            salvarNo(fi, node,T); // Salva o nó atualizado no arquivo de índice
+            liberaNo(node,T); // Libera a memória alocada para o nó
             fclose(fi); // Fecha o arquivo de índice
             return; // Retorna após inserir o jogador na folha
         }
@@ -474,7 +548,7 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
         printf("Inserindo jogador id:%s na folha: %s\n",novoJogador->id, node->filhos[i]);
         inserirJogadorNaFolhaOrdenado(node->filhos[i],novoJogador);
         fclose(fi); // Fecha o arquivo de índice
-        free(node); // Libera a memória alocada para o nó
+        liberaNo(node,T); // Libera a memória alocada para o nó
         printf("Jogador inserido na folha com sucesso.\n\n\n");
         return; // Retorna após inserir o jogador na folha
     }
@@ -484,10 +558,10 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
     int nextNodeIndex = atoi(nomeFilho);
     printf("pulando para o próximo nó: %s\n", nomeFilho);
 
-    free(node);
+    liberaNo(node,T);
     fclose(fi);
     Pai = atual; // Atualiza o nó Pai para o nó atual
-    InsereJogador(nomeArqIndex, novoJogador, nextNodeIndex,Pai); // Chama recursivamente a função para o próximo nó
+    InsereJogador(nomeArqIndex, novoJogador, nextNodeIndex,Pai,T); // Chama recursivamente a função para o próximo nó
     return; // Retorna após inserir o jogador na folha
 }
 
@@ -497,38 +571,39 @@ void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai){
 //FUNÇOES PARA IMPRIMIR A ÁRVORE B+
 //-----------------------------------------------------------------------------------------------------------------------------------
 // Função para imprimir a árvore B+ (apenas para depuração)
-void imprimirArvoreAux(char *nomeArqIndex, int n, int nivel) {
+void imprimirArvoreAux(char *nomeArqIndex, int n, int nivel,int T) {
     FILE *fi = fopen(nomeArqIndex, "rb");
     if (!fi) {
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
 
-    Tnode node;
-    fseek(fi, sizeof(int) + n * sizeof(Tnode), SEEK_SET);
-    fread(&node, sizeof(Tnode), 1, fi);
+    fseek(fi, sizeof(int) + n * tamanhoNo(T), SEEK_SET); // Lê o nó do arquivo de índice
+    Tnode *node = lerNo(fi,T); // Cria um novo nó para armazenar os dados lidos do arquivo
     fclose(fi);
     
-    for (int i = node.numKeys; i >= 0; i--) {
-        if (strncmp(node.filhos[i], "leaf", 4) == 0) {
+    for (int i = node->numKeys; i >= 0; i--) {
+        if (strncmp(node->filhos[i], "leaf", 4) == 0) {
             // É folha, imprime os dados da folha
-            printFolhaImpressa(node.filhos[i], nivel + 1);
+            printFolhaImpressa(node->filhos[i], nivel + 1);
         } else {
             // É nó interno, converte offset para int e chama recursivamente
-            int offsetFilho = atoi(node.filhos[i]);
-            imprimirArvoreAux(nomeArqIndex, offsetFilho, nivel + 1);
+            int offsetFilho = atoi(node->filhos[i]);
+            imprimirArvoreAux(nomeArqIndex, offsetFilho, nivel + 1,T);
         }
 
         if (i > 0) {
             for (int j = 0; j < nivel; j++) printf("\t");
-            printf("chave: %s\n", node.keys[i - 1]);
+            printf("chave: %s\n", node->keys[i - 1]);
         }
     }
+
+    liberaNo(node,T); // Libera a memória alocada para o nó
 }
 
-void imprimirArvoreB(){
+void imprimirArvoreB(int T){
     printf("Imprimindo a árvore B+:\n");
-    imprimirArvoreAux("index.bin", 0, 0); // Começa do nó raiz (índice 0) e nível 0
+    imprimirArvoreAux("index.bin", 0, 0,T); // Começa do nó raiz (índice 0) e nível 0
     printf("Árvore B+ impressa com sucesso.\n");
 }
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -543,7 +618,7 @@ void imprimirArvoreB(){
 // Retorno:
 // - Um ponteiro para a estrutura Tplayer contendo os dados do jogador, ou NULL se não encontrado.
 // Observação: NA CHAMADA DA FUNÇÃO O n DEVE SER 0 para acesssar o primeiro nó da árvore B+
-Tplayer *buscarJogador(char *id,int n) {
+Tplayer *buscarJogador(char *id,int n,int T) {
     printf("Buscando jogador com ID: %s\n", id);
     if (id == NULL || n < 0) {
         printf("ID inválido ou índice negativo.\n");
@@ -555,10 +630,9 @@ Tplayer *buscarJogador(char *id,int n) {
         exit(1);
     }
 
-    Tnode *node= malloc(sizeof(Tnode));
 
-    fseek(fi, n * sizeof(Tnode) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
-    fread(node, sizeof(Tnode), 1, fi);// Lê o nó do arquivo e salva o no em node
+    fseek(fi, n * tamanhoNo(T) + sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó n
+    Tnode *node = lerNo(fi,T); // Lê o nó do arquivo de índice
 
     int i = 0;
     while((i < node->numKeys) && (strcmp(node->keys[i], id) <= 0)) { // Percorre as chaves do nó até encontrar a posição correta
@@ -568,10 +642,11 @@ Tplayer *buscarJogador(char *id,int n) {
     printf("Chave a ser buscada: %i\n", i);
     if(strncmp(node->filhos[i], "leaf", 4) == 0) { // Se for uma folha de valores (significa que é um nó folha)
         printf("Buscando jogador na folha: %s\n", node->filhos[i]);
-        // filhos[i] aqui contém nome do arquivo da folha
+        // filhos[i] aqui contém nome do arquivo da folha 
         fclose(fi);
-        free(node);
-        return buscaBinariaJogadorNaFolha(node->filhos[i],id); // Busca o jogador na folha correspondente
+        Tplayer *jogador = buscaBinariaJogadorNaFolha(node->filhos[i], id);
+        liberaNo(node,T); // Libera a memória alocada para o nó
+        return jogador; // Busca o jogador na folha correspondente
     }
 
     // Se não for folha de valores, significa que é um nó interno (tem filhos) ->vai salvar o ofset do filho correspondente
@@ -580,10 +655,10 @@ Tplayer *buscarJogador(char *id,int n) {
     int nextNodeIndex = atoi(nomeFilho);
     printf("Próximo nó: %s\n", nomeFilho);
 
-    free(node);
+    liberaNo(node,T); // Libera a memória alocada para o nó
     fclose(fi);
 
-    return buscarJogador(id, nextNodeIndex); // Chama recursivamente a função para o próximo nó
+    return buscarJogador(id, nextNodeIndex,T); // Chama recursivamente a função para o próximo nó
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -600,20 +675,20 @@ void killFolha(char *nomeFolha) {
     
 }
 
-void KillArvoreBaux(char *nomeArqIndex) {
+void KillArvoreBaux(char *nomeArqIndex,int T) {
     FILE *fi = fopen(nomeArqIndex, "rb");
     if (fi == NULL) {
         printf("Erro ao abrir o arquivo de índice.\n");
         exit(1);
     }
 
-    Tnode node;
+    Tnode *node;
     fseek(fi, sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para
-    while (fread(&node, sizeof(Tnode), 1, fi) == 1) { // Lê todos os nós do arquivo
-        for (int i = 0; i < node.numKeys+1; i++) {
-            if(strncmp(node.filhos[i], "leaf", 4) == 0) { // Verifica se é uma folha
-                printf("Removendo folha: %s\n", node.filhos[i]);
-                killFolha(node.filhos[i]); // Mata a folha correspondente
+    while ((node = lerNo(fi,T)) != NULL) { // Lê todos os nós do arquivo
+        for (int i = 0; i < node->numKeys+1; i++) {
+            if(strncmp(node->filhos[i], "leaf", 4) == 0) { // Verifica se é uma folha
+                printf("Removendo folha: %s\n", node->filhos[i]);
+                killFolha(node->filhos[i]); // Mata a folha correspondente
             }
 
         }
@@ -622,8 +697,8 @@ void KillArvoreBaux(char *nomeArqIndex) {
     fclose(fi); // Fecha o arquivo de índice
 }
 
-void KillArvoreB() {
-    KillArvoreBaux("index.bin"); // Mata as folhas da árvore B+
+void KillArvoreB(int T) {
+    KillArvoreBaux("index.bin",T); // Mata as folhas da árvore B+
     if (remove("index.bin") != 0) { // Remove o arquivo de índice
         printf("Erro ao remover o arquivo de índice.\n");
     } else {
