@@ -150,6 +150,10 @@ void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char 
             j.semanasNoTopo = 0;
         }
         j.nacionalidade[3] = '\0'; // Garante que a string de nacionalidade tenha o tamanho correto
+<<<<<<< HEAD
+=======
+        maiuscula(j.nacionalidade); // Converte nacionalidade para maiúsculas
+>>>>>>> 5d838b4f4bd3ec384daa6a91445af26a01c41952
         geradorIdJogador(j.id,j.nome, j.anoNascimento, j.nacionalidade, *numeroDeJogadores);
         // DEBUG
         printf("ID gerado: %s, Nome: %s, Nasc: %d, Morte: %d, Pais:%s, Rank:%d, Ano Rank: %d, Semanas:%d\n", j.id,j.nome,j.anoNascimento,j.anoMorte,j.nacionalidade,j.ranking,j.anoRanking,j.semanasNoTopo); // DEBUG
