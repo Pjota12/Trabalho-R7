@@ -1,7 +1,7 @@
 #include "THMScamp_ano.h"
 
-int hash_camp_ano(int ano, int tam){
-  return ano % tam;
+int hash_camp_ano(int ano){
+  return ano % TAM_HASH_CAMP_ANO;
 }
 
 void THcamp_ano_inicializa(char *tabHash, char *dados){
@@ -59,7 +59,7 @@ void THcamp_ano_insere(char *arqHash, char *arqDados, char *id, int ano) {
     FILE *fh = fopen(arqHash,"rb+"), *fd = fopen(arqDados,"rb+");
     if((!fh) || (!fd)) exit(1);
 
-    int hash = ano % TAM_HASH_CAMP_ANO;
+    int hash = hash_camp_ano(ano);
     int pos, ant = -1, ppl = -1;
 
     fseek(fh, hash * sizeof(int), SEEK_SET);
@@ -159,7 +159,7 @@ char *THcamp_ano_busca(char *arqHash, char *arqDados, char *id, int ano) {
     FILE *fp = fopen(arqHash,"rb");
     if(!fp) exit(1);
 
-    int pos, hash = hash_camp_ano(ano, TAM_HASH_CAMP_ANO);
+    int pos, hash = hash_camp_ano(ano);
     fseek(fp, hash * sizeof(int), SEEK_SET);
     fread(&pos, sizeof(int), 1, fp);
     fclose(fp);
@@ -191,7 +191,7 @@ void THcamp_ano_remove(char *arqHash, char *arqDados, char *id, int ano) {
     FILE *fh = fopen(arqHash, "rb"), *fd = fopen(arqDados, "rb+");
     if (!fh || !fd) exit(1);
 
-    int hash = ano % TAM_HASH_CAMP_ANO, pos;
+    int hash = hash_camp_ano(ano), pos;
 
     // Busca o início da lista encadeada para o ano
     fseek(fh, hash * sizeof(int), SEEK_SET);
