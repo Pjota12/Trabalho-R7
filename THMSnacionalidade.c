@@ -35,11 +35,11 @@ void THnacionalidade_insere(char *arqHash, char *arqDados, char *id) {
     strncpy(nacionalidade,&id[5],3);
 
     hash = hash_nacionalidade(nacionalidade);
-    printf("%d ",hash);
+    //printf("%d ",hash);
 
     fseek(fh, hash * sizeof(int), SEEK_SET);
     fread(&pos, sizeof(int), 1, fh);
-    printf("%d ",pos);
+    //printf("%d ",pos);
 
     THnacionalidade aux;
 
@@ -59,7 +59,7 @@ void THnacionalidade_insere(char *arqHash, char *arqDados, char *id) {
 
     THnacionalidade elem;
     strcpy(elem.id,id);
-    printf("%s ",elem.id);
+    //printf("%s ",elem.id);
     elem.status = 1;
 
     if(ppl == -1) {
@@ -130,7 +130,7 @@ void THnacionalidade_construcao(char *arqPlayers, char *arqHash, char *arqDados)
             }
         }
         j.nacionalidade[3] = '\0'; // Garante que a string de nacionalidade tenha o tamanho correto
-        printf("%s ",j.nacionalidade);
+        //printf("%s ",j.nacionalidade);
 
         char id[ID_SIZE];
         strcpy(id, THnome_busca("hash_nome.bin", "dados_nome.bin", j.nome));
@@ -200,13 +200,12 @@ char *THnacionalidade_busca(char *arqHash, char *arqDados, char *id) {
         fseek(fp, pos, SEEK_SET);
         fread(&aux, sizeof(THnacionalidade), 1, fp);
         if(!strcmp(aux.id,id)) {
+            fclose(fp);
             if(!aux.status) {
-                fclose(fp);
                 return "\0";
             }
             char *idRetorno = malloc(ID_SIZE * sizeof(char));
             strcpy(idRetorno, id);
-            fclose(fp);
             return idRetorno;
         }
         pos = aux.proximo;

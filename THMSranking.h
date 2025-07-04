@@ -18,8 +18,9 @@ typedef struct HashNodeRan {
 int hash_ranking(int ano);
 void THranking_inicializa(char *arqHash, char *arqDados);
 void THranking_retira(char *arqHash, char *arqDados, THranking *player);
+void THranking_retira_id(char *arqHash, char *arqDados, char *id);
 void THranking_imprime(char *arqHash, char *arqDados);
-THranking *THranking_busca(char *arqHash, char *arqDados, THranking *player);
+int THranking_busca(char *arqHash, char *arqDados, char *id, int ano);
 void THranking_insere(char *arqHash, char *arqDados, THranking *player);
 void THranking_copia(char *arqHash, char *arqDados, int ano);
 char *THcamp_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobrenome);

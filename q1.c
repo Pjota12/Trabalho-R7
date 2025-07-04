@@ -35,7 +35,7 @@ void imprime_jogadores(PlayerTitulos* jogadores, int aposentado) {
     }
 }
 
-void libera(PlayerTitulos *jogadores) { // libera a lista
+void libera_titulos(PlayerTitulos *jogadores) { // libera a lista
     PlayerTitulos *temp;
     while (jogadores){
         temp = jogadores;
@@ -44,7 +44,7 @@ void libera(PlayerTitulos *jogadores) { // libera a lista
     }
 }
 
-PlayerTitulos *insere_ordenado(PlayerTitulos *lista, Tplayer *player) {
+PlayerTitulos *insere_titulos_ordenado(PlayerTitulos *lista, Tplayer *player) {
     PlayerTitulos *playerTitulos = (PlayerTitulos *)malloc(sizeof(PlayerTitulos));
     // ID
     strcpy(playerTitulos->id,player->id);
@@ -106,7 +106,7 @@ PlayerTitulos *insere_ordenado(PlayerTitulos *lista, Tplayer *player) {
 int main() {
 
     // Para construir a hash
-    //THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
+    THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
 
     FILE *fp = fopen("hash_ativos.bin","rb");
     if(!fp) exit(1);
@@ -130,15 +130,16 @@ int main() {
         THativos aux;
         fseek(fp,pos,SEEK_SET);
         fread(&aux,sizeof(THativos),1,fp);
-        Tplayer *player = buscarJogador(aux.id,0,10);
-
-        listaPlayerTitulos = insere_ordenado(listaPlayerTitulos, player);
-        
+        if(aux.status) {
+            Tplayer *player = buscarJogador(aux.id,0,t);
+    
+            listaPlayerTitulos = insere_titulos_ordenado(listaPlayerTitulos, player);    
+        }
         pos = aux.proximo;
     }
     
     imprime_jogadores(listaPlayerTitulos, !hash);
-    libera(listaPlayerTitulos);
+    libera_titulos(listaPlayerTitulos);
 
     return 0;
 }

@@ -81,10 +81,11 @@ int main() {
         THativos aux;
         fseek(fp,pos,SEEK_SET);
         fread(&aux,sizeof(THativos),1,fp);
-        Tplayer *player = buscarJogador(aux.id,0,10);
-
-        listaTLDETEN = insere_ordenado(listaTLDETEN, player);
-        
+        if(aux.status) {
+            Tplayer *player = buscarJogador(aux.id,0,t);
+    
+            listaTLDETEN = insere_ordenado(listaTLDETEN, player);    
+        }
         pos = aux.proximo;
     }
 
@@ -94,10 +95,11 @@ int main() {
         THativos aux;
         fseek(fp,pos,SEEK_SET);
         fread(&aux,sizeof(THativos),1,fp);
-        Tplayer *player = buscarJogador(aux.id,0,10);
-
-        listaTLDETEN = insere_ordenado(listaTLDETEN, player);
-        
+        if(aux.status) {
+            Tplayer *player = buscarJogador(aux.id,0,10);
+    
+            listaTLDETEN = insere_ordenado(listaTLDETEN, player);    
+        }
         pos = aux.proximo;
     }
 

@@ -1,10 +1,10 @@
-#include "THMSranking.h"
+#include "THMStemporada.h"
 
-int hash_ranking(int ano) {
+int hash_temporada(int ano) {
     return ano % N;
 }
 
-void THranking_inicializa(char *arqHash, char *arqDados) {
+void THtemporada_inicializa(char *arqHash, char *arqDados) {
     FILE *fh = fopen(arqHash,"wb"), *fd = fopen(arqDados,"wb");
     if((!fh) || (!fd)) exit(1);
     // Incializa hash
@@ -14,7 +14,7 @@ void THranking_inicializa(char *arqHash, char *arqDados) {
     fclose(fd);
 }
 
-void THranking_retira_id(char *arqHash, char *arqDados, char *id) {
+void THtemporada_retira_id(char *arqHash, char *arqDados, char *id) {
     FILE *fh = fopen(arqHash,"rb+"), *fd = fopen(arqDados,"rb+");
     if((!fh) || (!fd)) exit(1);
 
@@ -23,18 +23,17 @@ void THranking_retira_id(char *arqHash, char *arqDados, char *id) {
     
     while(r) {
 
-        THranking player;
+        THtemporada player;
 
         while(pos != -1) {
             fseek(fd, pos, SEEK_SET);
-            fread(&player,sizeof(THranking),1,fd);
+            fread(&player,sizeof(THtemporada),1,fd);
 
             if(!strcmp(player.id,id)) {
-                // if(!strcmp(aux.nome,player->nome)) {
                 if(player.status) {
                     player.status = 0;
                     fseek(fd, pos, SEEK_SET);
-                    fwrite(&player,sizeof(THranking),1,fd);
+                    fwrite(&player,sizeof(THtemporada),1,fd);
                 }
                 
             }
@@ -46,72 +45,103 @@ void THranking_retira_id(char *arqHash, char *arqDados, char *id) {
     fclose(fd);
 }
 
-void THranking_retira(char *arqHash, char *arqDados, THranking *player) {
-    FILE *fp = fopen(arqHash,"rb");
-    if(!fp) exit(1);
-    int hash, pos;
-    
-    hash = hash_ranking(player->ano);
+void THtemporada_insere(char *arqHash, char *arqDados, THtemporada *player) {
 
-    fseek(fp, hash * sizeof(int), SEEK_SET);
-    fread(&pos, sizeof(int), 1, fp);
-    fclose(fp);
-    if(pos == -1) return;
-    fp = fopen(arqDados,"rb+");
-    if(!fp) exit(1);
-    THranking aux;
+    FILE *fh = fopen(arqHash,"rb+"), *fd = fopen(arqDados,"rb+");
+    if((!fd) || (!fh)) exit(1);
+
+    int hash, pos, ant = -1, ppl = -1;
+    
+    hash = hash_temporada(player->ano);
+
+    fseek(fh, hash * sizeof(int), SEEK_SET);
+    fread(&pos, sizeof(int), 1, fh);
+
+    THtemporada aux;
+
     while(pos != -1) {
-        fseek(fp, pos, SEEK_SET);
-        fread(&aux, sizeof(THranking), 1, fp);
-        if(!strcmp(aux.id,player->id)) {
-        // if(!strcmp(aux.nome,player->nome)) {
-            if(!aux.status) {
-                fclose(fp);
-                return;
-            }
-            aux.status = 0;
-            fseek(fp, pos, SEEK_SET);
-            fwrite(&aux,sizeof(THranking),1,fp);
-            fclose(fp);
+        fseek(fd, pos, SEEK_SET);
+        fread(&aux, sizeof(THtemporada), 1, fd);
+        if((aux.ano == player->ano) && (!strcmp(aux.id,player->id))) {
+            aux.pontos += player->pontos;
+            aux.grandSlams += player->grandSlams;
+            aux.atpFinals += player->atpFinals;
+            aux.olimpiadas += player->olimpiadas;
+            aux.atp1000 += player->atp1000;
+            fseek(fd, pos, SEEK_SET);
+            fwrite(&aux,sizeof(THtemporada),1,fd);
+            fclose(fh);
+            fclose(fd);
             return;
         }
+        
+        if((!aux.status) && (ppl == -1)) ppl = pos;
+        ant = pos;
         pos = aux.proximo;
     }
-    fclose(fp);
-    return;
+
+    player->status = 1;
+
+    if(ppl == -1) {
+        player->proximo = -1;
+        fseek(fd, 0L, SEEK_END);
+        pos = ftell(fd);
+        fwrite(player, sizeof(THtemporada), 1, fd);
+        if(ant == -1) {
+            fseek(fh, hash * sizeof(int), SEEK_SET);
+            fwrite(&pos, sizeof(int), 1, fh);
+        }
+        else {
+            aux.proximo = pos;
+            fseek(fd, ant, SEEK_SET);
+            fwrite(&aux, sizeof(THtemporada), 1, fd);
+        }
+        fclose(fh);
+        fclose(fd);
+        return;
+    }
+
+    fseek(fd, ppl, SEEK_SET);
+    fread(&aux, sizeof(THtemporada), 1, fd);
+    player->proximo = aux.proximo;
+    fseek(fd, ppl, SEEK_SET);
+    fwrite(player, sizeof(THtemporada), 1, fd);
+    
+    fclose(fh);
+    fclose(fd);
 }
 
-void THranking_imprime(char *arqHash, char *arqDados) {
+void THtemporada_imprime(char *arqHash, char *arqDados) {
     
     FILE *fh = fopen(arqHash,"rb"), *fd = fopen(arqDados,"rb");
     if((!fh) || (!fd)) exit(1);
 
     int ano = 1990, pos, hash;
     fread(&pos,sizeof(int),1,fh);
-    hash = hash_ranking(ano);
+    hash = hash_temporada(ano);
     fseek(fh,hash*sizeof(int),SEEK_SET);
     fread(&pos,sizeof(int),1,fh);
     
     while(ano < ANO_ATUAL) {
         fseek(fd, pos, SEEK_SET);
 
-        THranking player;
+        THtemporada player;
         int players = 0;
 
         printf("%d\n",ano);
 
         while(pos != -1) {
             fseek(fd, pos, SEEK_SET);
-            fread(&player,sizeof(THranking),1,fd);
+            fread(&player,sizeof(THtemporada),1,fd);
             if((player.status) && (player.ano == ano)) {
                 players++;
-                printf("%d %s %s %d\n",players,player.id,player.nome,player.pontos);
+                printf("%d %s %s %d %d %d %d %d\n",players,player.id,player.nome,player.pontos,player.grandSlams,player.atpFinals,player.olimpiadas,player.atp1000);
             }
             pos = player.proximo;
         }
         printf("\n");
         ano++;
-        hash = hash_ranking(ano);
+        hash = hash_temporada(ano);
         fseek(fh,hash*sizeof(int),SEEK_SET);
         fread(&pos,sizeof(int),1,fh);
     }
@@ -120,12 +150,12 @@ void THranking_imprime(char *arqHash, char *arqDados) {
     fclose(fd);
 }
 
-int THranking_busca(char *arqHash, char *arqDados, char *id, int ano) {
+int THtemporada_busca(char *arqHash, char *arqDados, char *id, int ano) {
     FILE *fp = fopen(arqHash,"rb");
     if(!fp) exit(1);
     int hash, pos;
 
-    hash = hash_ranking(ano);
+    hash = hash_temporada(ano);
 
     fseek(fp, hash * sizeof(int), SEEK_SET);
     fread(&pos, sizeof(int), 1, fp);
@@ -133,16 +163,16 @@ int THranking_busca(char *arqHash, char *arqDados, char *id, int ano) {
     if(pos == -1) return 0;
     fp = fopen(arqDados,"rb");
     if(!fp) exit(1);
-    THranking aux;
+    THtemporada aux;
     while(pos != -1) {
         fseek(fp, pos, SEEK_SET);
-        fread(&aux, sizeof(THranking), 1, fp);
+        fread(&aux, sizeof(THtemporada), 1, fp);
         if(!strcmp(aux.id,id)) {
             fclose(fp);
             if(!aux.status) {
                 return 0;
             }
-            return 1;
+            return aux.pontos;
         }
         pos = aux.proximo;
     }
@@ -150,117 +180,7 @@ int THranking_busca(char *arqHash, char *arqDados, char *id, int ano) {
     return 0;
 }
 
-void THranking_insere(char *arqHash, char *arqDados, THranking *player) {
-
-    FILE *fh = fopen(arqHash,"rb+"), *fd = fopen(arqDados,"rb+");
-    if((!fh) || (!fd)) exit(1);
-
-    //printf("Inserindo %s %s\n",player->nome,player->id);
-
-    int hash, pos, ant = -1;
-    
-    hash = hash_ranking(player->ano);
-    
-    fseek(fh, hash * sizeof(int), SEEK_SET);
-    fread(&pos, sizeof(int), 1, fh);
-    
-    THranking aux, anterior;
-    
-    while((pos != -1)) { // procura na linha
-        fseek(fd, pos, SEEK_SET);
-        fread(&aux, sizeof(THranking), 1, fd);
-        // if((aux.status) && (!strcmp(aux.nome,player->nome))) {
-        if((aux.status) && (aux.ano == player->ano) && (!strcmp(aux.id,player->id))) {
-        
-            aux.status = 0;
-            fseek(fd,pos,SEEK_SET);
-            fwrite(&aux,sizeof(THranking),1,fd);
-            fclose(fh);
-            fclose(fd);
-            
-            aux.pontos += player->pontos;
-            THranking_insere(arqHash,arqDados,&aux);
-            return;
-        }
-        ant = pos;
-        pos = aux.proximo;
-    }
-
-    ant = -1;
-    fseek(fh, hash * sizeof(int), SEEK_SET);
-    fread(&pos, sizeof(int), 1, fh);
-    
-    while((pos != -1)) { // encontra pos certa
-        fseek(fd, pos, SEEK_SET);
-        fread(&aux, sizeof(THranking), 1, fd);
-        if(player->pontos > aux.pontos) break;
-        anterior = aux;
-        ant = pos;
-        pos = aux.proximo;
-    }
-
-    THranking elem;
-
-    strcpy(elem.nome,player->nome);
-    strcpy(elem.id,player->id);
-    elem.ano = player->ano;
-    elem.pontos = player->pontos;
-    elem.status = 1;
-    if(ant == -1) { // inicio
-        elem.proximo = pos;
-    }
-    else {
-        elem.proximo = anterior.proximo;
-    }
-
-    fseek(fd, 0L, SEEK_END);
-    pos = ftell(fd);
-    fwrite(&elem, sizeof(THranking), 1, fd); 
-
-    if(ant == -1) { // inicio
-        fseek(fh, hash * sizeof(int), SEEK_SET);
-        fwrite(&pos, sizeof(int), 1, fh);
-    }
-    else { // meio ou fim
-        anterior.proximo = pos;
-        fseek(fd, ant, SEEK_SET);
-        fwrite(&anterior, sizeof(THranking), 1, fd);
-    }
-    fclose(fh);
-    fclose(fd);
-}
-
-void THranking_copia(char *arqHash, char *arqDados, int ano) {
-    FILE *fp = fopen(arqHash,"rb");
-    if(!fp) exit(1);
-    
-    int hash, pos;
-    hash = hash_ranking(ano);
-    fseek(fp, hash * sizeof(int), SEEK_SET);
-    fread(&pos, sizeof(int), 1, fp);
-    fclose(fp);
-
-    if(pos == -1) return;
-    fp = fopen(arqDados,"rb");
-    if(!fp) exit(1);
-
-    THranking aux;
-
-    while(pos != -1) {
-        fseek(fp, pos, SEEK_SET);
-        fread(&aux, sizeof(THranking), 1, fp);
-        if(aux.status) {
-            aux.ano = ano + 1;
-            fclose(fp);
-            THranking_insere(arqHash, arqDados, &aux);
-            fp = fopen(arqDados,"rb");
-        }
-        pos = aux.proximo;
-    }
-    fclose(fp);
-}
-
-char *THranking_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobrenome) {
+char *THtemporada_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobrenome) {
     FILE *fp = fopen(tabHashNome, "rb");
     if (!fp) exit(1);
 
@@ -318,7 +238,7 @@ char *THranking_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobren
     return NULL;
 }
 
-void THranking_construcao(char *arqChampions, char *arqHash, char *arqDados, int t) {
+void THtemporada_construcao(char *arqChampions, char *arqHash, char *arqDados, int t) {
     
     FILE *fp = fopen(arqChampions, "r");
     if (fp == NULL) {
@@ -333,23 +253,33 @@ void THranking_construcao(char *arqChampions, char *arqHash, char *arqDados, int
         1000,1000,1000,1000,1000,1000,1000,1000,1000 // ATP 1000
     };
 
-    THranking_inicializa(arqHash,arqDados);
+    THtemporada_inicializa(arqHash,arqDados);
 
     char linha[1024];
     fgets(linha, sizeof(linha), fp); // pula cabeçalho
 
     while (fgets(linha, sizeof(linha), fp)) {
         char *token = strtok(linha, "\\");
-        int coluna = -1, anoAtual;
+        int coluna = -1;
 
-        THranking player;
+        THtemporada player;
 
-        anoAtual =  atoi(token);
-        player.ano = anoAtual;
+        player.ano = atoi(token);
         
         while (token && coluna < 15) {
 
             if (coluna >= 0) {
+
+                player.grandSlams = 0;
+                player.atpFinals = 0;
+                player.olimpiadas = 0;
+                player.atp1000 = 0;
+
+                if(coluna < 4) player.grandSlams = 1;
+                else if(coluna < 5) player.atpFinals = 1;
+                else if(coluna < 6) player.olimpiadas = 1;
+                else player.atp1000 = 1;
+
                 // Remove o conteúdo entre parênteses
                 char *abreParenteses = strchr(token, '(');
                 if (abreParenteses)
@@ -361,7 +291,7 @@ void THranking_construcao(char *arqChampions, char *arqHash, char *arqDados, int
 
                 if (strcmp(token, "-") != 0) {
 
-                    char *id = THranking_busca_sobrenome("hash_nome.bin", "dados_nome.bin", token);
+                    char *id = THtemporada_busca_sobrenome("hash_nome.bin", "dados_nome.bin", token);
                     if (id) {
                         strcpy(player.id,id);
                         Tplayer *playerArv;
@@ -374,24 +304,21 @@ void THranking_construcao(char *arqChampions, char *arqHash, char *arqDados, int
                     
                     //printf("%s %s ",player.id,player.nome);
                     
-                    THranking_insere(arqHash, arqDados, &player);
+                    THtemporada_insere(arqHash, arqDados, &player);
                 }
             }
             token = strtok(NULL, "\\");
             coluna++;
         }
-
-        THranking_copia(arqHash, arqDados, anoAtual);
+        
     }
-    
-    //THranking_imprime(arqHash, arqDados);
 
     fclose(fp);
 }
 
 // int main() {
 
-//     THranking_construcao("champions.txt","hash_ranking.bin","dados_ranking.bin",10);
-//     THranking_imprime("hash_ranking.bin","dados_ranking.bin");
+//     THtemporada_construcao("champions.txt","hash_temporada.bin","dados_temporada.bin",10);
+//     THtemporada_imprime("hash_temporada.bin","dados_temporada.bin");
 //     return 0;
 // }

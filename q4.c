@@ -14,11 +14,12 @@ void imprime_ranking_ano(char *arqHash, char *arqDados) {
 
     int ano = 1990, pos, hash;
     fread(&pos,sizeof(int),1,fh);
-    hash = hash_ranking(ano);
-    fseek(fh,hash*sizeof(int),SEEK_SET);
-    fread(&pos,sizeof(int),1,fh);
     
     while(ano < ANO_ATUAL) {
+        hash = hash_ranking(ano);
+        fseek(fh,hash*sizeof(int),SEEK_SET);
+        fread(&pos,sizeof(int),1,fh);
+
         fseek(fd, pos, SEEK_SET);
 
         THranking player;
@@ -29,7 +30,7 @@ void imprime_ranking_ano(char *arqHash, char *arqDados) {
         while((pos != -1) && (players < 25)) {
             fseek(fd, pos, SEEK_SET);
             fread(&player,sizeof(THranking),1,fd);
-            if(player.status) {
+            if((player.status) && (player.ano == ano)) {
                 players++;
                 printf("%d %s %s %d\n",players,player.id,player.nome,player.pontos);
             }
@@ -37,9 +38,6 @@ void imprime_ranking_ano(char *arqHash, char *arqDados) {
         }
         printf("\n");
         ano++;
-        hash = hash_ranking(ano);
-        fseek(fh,hash*sizeof(int),SEEK_SET);
-        fread(&pos,sizeof(int),1,fh);
     }
 
     fclose(fh);
