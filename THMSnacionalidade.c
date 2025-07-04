@@ -142,7 +142,7 @@ void THnacionalidade_construcao(char *arqPlayers, char *arqHash, char *arqDados)
     fclose(fp);
 }
 
-void THativos_retira(char *arqHash, char *arqDados, char *id) {
+void THnacionalidade_retira(char *arqHash, char *arqDados, char *id) {
     FILE *fp = fopen(arqHash,"rb");
     if(!fp) exit(1);
     int hash, pos;
@@ -215,7 +215,7 @@ char *THnacionalidade_busca(char *arqHash, char *arqDados, char *id) {
     return "\0";
 }
 
-int main() {
+// int main() {
 
-    THnacionalidade_construcao("tennis_players.txt", "hash_nacionalidade.bin","dados_nacionalidade.bin");
-}
+//     THnacionalidade_construcao("tennis_players.txt", "hash_nacionalidade.bin","dados_nacionalidade.bin");
+// }

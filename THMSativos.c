@@ -12,7 +12,7 @@ void THativos_inicializa(char *arqHash, char *arqDados) {
 
 void THativos_insere(char *arqHash, char *arqDados, char *id) {
 
-    FILE *fh = fopen("hash_ativos.bin","rb+"), *fd = fopen("dados_ativos.bin","rb+");
+    FILE *fh = fopen(arqHash,"rb+"), *fd = fopen(arqDados,"rb+");
     if((!fh) || (!fd)) exit(1);
 
     int hash = 1, pos, ant = -1, ppl = -1, anoNascimento;
@@ -190,7 +190,7 @@ char *THativos_busca(char *arqHash, char *arqDados, char *id) {
     return "\0";
 }
 
-int main() {
+// int main() {
 
-    THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
-}
+//     THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
+// }

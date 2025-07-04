@@ -12,7 +12,7 @@
 #define ID_SIZE 13
 #define N 59
 
-typedef struct HashNode {
+typedef struct HashNodeNac {
     char id[ID_SIZE];
     int status, proximo; 
 }THnacionalidade;
@@ -22,7 +22,7 @@ unsigned int hash_nacionalidade(const char* str);
 void THnacionalidade_inicializa(char *arqHash, char *arqDados);
 void THnacionalidade_insere(char *arqHash, char *arqDados, char *id);
 void THnacionalidade_construcao(char *arqPlayers, char *arqHash, char *arqDados); //constroi hash a partir do arquivo players
-void THativos_retira(char *arqHash, char *arqDados, char *id);
+void THnacionalidade_retira(char *arqHash, char *arqDados, char *id);
 char *THnacionalidade_busca(char *arqHash, char *arqDados, char *id);
 
 #endif

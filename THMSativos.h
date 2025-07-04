@@ -12,7 +12,7 @@
 #define ID_SIZE 13
 #define ANO_ATUAL 2025
 
-typedef struct HashNode {
+typedef struct HashNodeAti {
     char id[ID_SIZE];
     int status, proximo; 
 }THativos;

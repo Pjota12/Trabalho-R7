@@ -10,8 +10,8 @@
 
 #define TAM_HASH 367 // Tamanho da tabela hash
 typedef struct THnomeToid{
-  char nome[50]; // Nome do aluno
-  char id[13]; // ID do aluno
+  char nome[50]; // Nome
+  char id[13]; // ID
   int status; // Indica se o registro está ocupado
   int proximo; // Próximo registro na lista encadeada
 }THnomeToid;

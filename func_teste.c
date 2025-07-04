@@ -99,7 +99,7 @@ void imprime_jogadores(PlayerTitulos* jogadores, int aposentado) {
     }
 }
 
-void libera(PlayerTitulos *jogadores){ // libera a lista
+void libera(PlayerTitulos *jogadores) { // libera a lista
     PlayerTitulos *temp;
     while (jogadores){
         temp = jogadores;
