@@ -19,7 +19,7 @@ typedef struct THcampNode {
     int prox;
 } THcamp;
 
-int hash_camp();
+int hash_camp(int coluna);
 void THcamp_inicializa(char *arqHash, char *arqDados);
 void THcamp_insere(char *arqHash, char *arqDados, char *id, int coluna, int ano);
 void THcamp_construcao(char *arqPlayers, char *arqHash, char *arqDados); //constroi hash a partir do arquivo players
