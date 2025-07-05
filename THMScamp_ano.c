@@ -18,38 +18,69 @@ char *THcamp_ano_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobre
     FILE *fp = fopen(tabHashNome, "rb");
     if (!fp) exit(1);
 
-    int pos;
-    char *id = NULL;
+    FILE *fd = fopen(dadosNome, "rb");
+    if (!fd) {
+        fclose(fp);
+        exit(1);
+    }
+
+    char nome[50];
+    char inicial = '\0';
+
+    while (*sobrenome && isspace(*sobrenome)) sobrenome++;  // tira espaço no início
+    int len = strlen(sobrenome);
+    while (len > 0 && isspace(sobrenome[len - 1])) sobrenome[--len] = '\0';  // tira espaço no fim
+
+    // Agora: se for "A. Medvedev", separa
+    char *espaco = strchr(sobrenome, ' ');
+    if (espaco && espaco - sobrenome == 2 && sobrenome[1] == '.') {
+        inicial = sobrenome[0];
+        strcpy(nome, espaco + 1);
+    } else {
+        // Caso comum: só o sobrenome (ou composto)
+        strcpy(nome, sobrenome);
+    }
+
+    // Busca na hash
     for (int i = 0; i < TAM_HASH; i++) {
+        int pos;
         fseek(fp, i * sizeof(int), SEEK_SET);
         fread(&pos, sizeof(int), 1, fp);
         if (pos == -1) continue;
 
-        FILE *fd = fopen(dadosNome, "rb");
-        if (!fd) {
-            fclose(fp);
-            exit(1);
-        }
-        THnomeToid jogador;
         while (pos != -1) {
+            THnomeToid jogador;
             fseek(fd, pos, SEEK_SET);
             fread(&jogador, sizeof(THnomeToid), 1, fd);
             if (jogador.status == 1) {
-                // Pega o último "palavra" do nome (o sobrenome)
-                char *ultimo = strrchr(jogador.nome, ' ');
-                const char *sobrenome_jogador = ultimo ? ultimo + 1 : jogador.nome;
-                if (strcasecmp(sobrenome_jogador, sobrenome) == 0) {
-                    char *id = malloc(ID_SIZE * sizeof(char));
-                    strcpy(id, jogador.id);
-                    fclose(fd);
-                    fclose(fp);
-                    return id;
+                int len_nome = strlen(jogador.nome);
+                int len_sub = strlen(nome);
+
+                if (len_nome >= len_sub &&
+                    strcasecmp(jogador.nome + len_nome - len_sub, nome) == 0) {
+                    
+                    if (inicial) {
+                        if (toupper(jogador.nome[0]) == toupper(inicial)) {
+                            char *id = malloc(ID_SIZE);
+                            strcpy(id, jogador.id);
+                            fclose(fd);
+                            fclose(fp);
+                            return id;
+                        }
+                    } else {
+                        char *id = malloc(ID_SIZE);
+                        strcpy(id, jogador.id);
+                        fclose(fd);
+                        fclose(fp);
+                        return id;
+                    }
                 }
             }
             pos = jogador.proximo;
         }
-        fclose(fd);
     }
+
+    fclose(fd);
     fclose(fp);
     return NULL;
 }
@@ -76,11 +107,11 @@ void THcamp_ano_insere(char *arqHash, char *arqDados, char *id, int ano) {
         pos = aux.prox;
     }
 
-    printf("\nano: %d \n", ano);
+    //printf("\nano: %d \n", ano);
 
     THcamp_ano elem;
     strcpy(elem.id,id);
-    printf("%s ",elem.id);
+    //printf("%s ",elem.id);
     elem.status = 1;
 
     if(ppl == -1) {
@@ -145,7 +176,11 @@ void THcamp_ano_construcao(char *arqChampions, char *arqHash, char *arqDados) {
                     if (id) {
                         THcamp_ano_insere(arqHash, arqDados, id, ano);
                         free(id);
+                    } else {
+                        THcamp_ano_insere(arqHash, arqDados, ID_DESCONHECIDO, ano);
                     }
+                } else{
+                    THcamp_ano_insere(arqHash, arqDados, VENC_INDETERMINADO, ano);
                 }
             }
 
@@ -214,6 +249,6 @@ void THcamp_ano_remove(char *arqHash, char *arqDados, char *id, int ano) {
     fclose(fd);
 }
 
-int main() {
+/*int main() {
     THcamp_ano_construcao("champions.txt","hash_campeonatos_ano.bin","dados_campeonatos_ano.bin");
-}
+}*/
