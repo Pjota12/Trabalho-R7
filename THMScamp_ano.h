@@ -4,14 +4,12 @@
 // gcc THMScamp_ano.c THMScamp_ano.h THMSnome.h THMSnome.c -o hashCampAno
 
 #include "THMSnome.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
 #define ID_SIZE 13
 #define TAM_HASH_CAMP_ANO 37
 #define QTD_TORNEIOS 15
+#define ID_DESCONHECIDO "UNKNOWN_ID"
+#define VENC_INDETERMINADO "UNDEFINED_WINNER"
 
 typedef struct THcampNode {
     int status;
