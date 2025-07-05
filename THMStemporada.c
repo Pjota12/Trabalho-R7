@@ -1,7 +1,7 @@
 #include "THMStemporada.h"
 
 int hash_temporada(int ano) {
-    return ano % N;
+    return ano % N_TEM;
 }
 
 void THtemporada_inicializa(char *arqHash, char *arqDados) {
@@ -9,7 +9,7 @@ void THtemporada_inicializa(char *arqHash, char *arqDados) {
     if((!fh) || (!fd)) exit(1);
     // Incializa hash
     int end = -1;
-    for(int i = 0; i < N; i++) fwrite(&end,sizeof(int),1,fh);
+    for(int i = 0; i < N_TEM; i++) fwrite(&end,sizeof(int),1,fh);
     fclose(fh);
     fclose(fd);
 }

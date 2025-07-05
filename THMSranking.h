@@ -7,7 +7,7 @@
 #include "THMSnome.h"
 
 #define ID_SIZE 13
-#define N 37
+#define N_RAN 37
 #define ANO_ATUAL 2025
 
 typedef struct HashNodeRan {

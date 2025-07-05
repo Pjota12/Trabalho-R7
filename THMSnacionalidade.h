@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define ID_SIZE 13
-#define N 59
+#define N_NAC 59
 
 typedef struct HashNodeNac {
     char id[ID_SIZE];

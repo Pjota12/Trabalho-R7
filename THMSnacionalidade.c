@@ -10,7 +10,7 @@ void maiuscula(char *str) {
 unsigned int hash_nacionalidade(const char* str) {
     unsigned int hash = 0;
     while (*str)
-        hash = (hash * 31 + *str++) % N;
+        hash = (hash * 31 + *str++) % N_NAC;
     return hash;
 }
 
@@ -19,7 +19,7 @@ void THnacionalidade_inicializa(char *arqHash, char *arqDados) {
     if((!fh) || (!fd)) exit(1);
     // Incializa hash
     int end = -1;
-    for(int i = 0; i < N; i++) fwrite(&end,sizeof(int),1,fh);
+    for(int i = 0; i < N_NAC; i++) fwrite(&end,sizeof(int),1,fh);
     fclose(fh);
     fclose(fd);
 }
@@ -30,9 +30,10 @@ void THnacionalidade_insere(char *arqHash, char *arqDados, char *id) {
     if((!fd) || (!fh)) exit(1);
 
     int hash, pos, ant = -1, ppl = -1;
-    char nacionalidade[3];
+    char nacionalidade[4];
 
     strncpy(nacionalidade,&id[5],3);
+    nacionalidade[3] = '\0';
 
     hash = hash_nacionalidade(nacionalidade);
     //printf("%d ",hash);
@@ -118,12 +119,12 @@ void THnacionalidade_construcao(char *arqPlayers, char *arqHash, char *arqDados)
 
         token = strtok(NULL, "\\");
         if (token) {
-            char nacionalidade[10];
+            char nacionalidade[4];
             strcpy(nacionalidade, token);
-            if(!strcmp(nacionalidade,"Australia")) strcpy(j.nacionalidade,"AUT");
-            else if(!strcmp(nacionalidade,"Belarus")) strcpy(j.nacionalidade,"BLR");
-            else if(!strcmp(nacionalidade,"Great Britain")) strcpy(j.nacionalidade,"GBR");
-            else if(!strcmp(nacionalidade,"Greece")) strcpy(j.nacionalidade,"GRC");
+            if(!strcmp(nacionalidade,"Australia")) strcpy(j.nacionalidade,"AUT\0");
+            else if(!strcmp(nacionalidade,"Belarus")) strcpy(j.nacionalidade,"BLR\0");
+            else if(!strcmp(nacionalidade,"Great Britain")) strcpy(j.nacionalidade,"GBR\0");
+            else if(!strcmp(nacionalidade,"Greece")) strcpy(j.nacionalidade,"GRC\0");
             else {
                 strncpy(j.nacionalidade, token,3);
                 maiuscula(j.nacionalidade); // Converte nacionalidade para maiúsculas
@@ -146,9 +147,10 @@ void THnacionalidade_retira(char *arqHash, char *arqDados, char *id) {
     FILE *fp = fopen(arqHash,"rb");
     if(!fp) exit(1);
     int hash, pos;
-    char nacionalidade[3];
+    char nacionalidade[4];
 
     strncpy(nacionalidade,&id[5],3);
+    nacionalidade[3] = '\0';
 
     hash = hash_nacionalidade(nacionalidade);
 
@@ -183,9 +185,10 @@ char *THnacionalidade_busca(char *arqHash, char *arqDados, char *id) {
     FILE *fp = fopen(arqHash,"rb");
     if(!fp) exit(1);
     int hash, pos;
-    char nacionalidade[3];
+    char nacionalidade[4];
 
     strncpy(nacionalidade,&id[5],3);
+    nacionalidade[3] = '\0';
 
     hash = hash_nacionalidade(nacionalidade);
 
