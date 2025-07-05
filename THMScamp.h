@@ -12,6 +12,8 @@
 #define ID_SIZE 13
 #define TAM_HASH_CAMP 17
 #define QTD_TORNEIOS 15
+#define ID_DESCONHECIDO "UNKNOWN_ID"
+#define VENC_INDETERMINADO "UNDEFINED_WINNER"
 
 typedef struct THcampNode {
     int ano, status;
