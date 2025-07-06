@@ -1,10 +1,11 @@
 #include "THMScamp_ano.h"
 #include "TABM.h"
+#include "TABMaux.h"
 
 /*5- pecorrer arquivo -> verificar se nas 4 linhas é o mesmo nome -> acessar tabela de id sobrenames => id -> retornar nome do 
 cara e o ano*/
 
-// gcc q5.c TABM.h TABM.c THMScamp_ano.h THMScamp_ano.c -o q5
+// gcc q5.c TABM.h TABM.c TABMaux.h TABMaux.c THMScamp_ano.h THMScamp_ano.c -o q5
 
 int vencedorGS(char *arqHash, char *arqDados, int ano, int t){
     FILE *fp = fopen(arqHash, "rb");
