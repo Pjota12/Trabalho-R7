@@ -57,6 +57,8 @@ void InicializarIndex(int T);
 
 void InsereJogador(char *nomeArqIndex,Tplayer *novoJogador,int atual,int Pai,int T);
 
+Tplayer *Removerjogador(char *nomeArqIndex, char *id, int T,int atual, int Pai);
+
 Tplayer* buscarJogador(char *id,int n,int T);
 
 void imprimirArvoreB(int T);

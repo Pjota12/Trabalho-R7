@@ -329,3 +329,11 @@ Tplayer *buscaBinariaJogadorNaFolha(char *nomeArquivoFolha, char *idJogador) {
     free(player); // Libera a memória alocada para o jogador
     return NULL; // Retorna NULL se o jogador não for encontrado
 }
+
+
+int ReadLeafNumber(char *nomeArquivoFolha) {
+    char numeroFolha[3]; // espaço para dois dígitos + terminador nulo
+    strncpy(numeroFolha, nomeArquivoFolha + 4, 2); // copia os dígitos (posições 4 e 5)
+    numeroFolha[2] = '\0'; // garante término da string
+    return atoi(numeroFolha); // converte para inteiro
+}

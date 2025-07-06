@@ -47,4 +47,6 @@ void inserirJogadorNaFolhaOrdenado(char *NomeArqFolha,Tplayer *novoJogador);
 // Função para inserir um jogador na folha ordenada
 Tplayer* buscaBinariaJogadorNaFolha(char *NomeArqFolha,char *idJogador);
 
+int ReadLeafNumber(char *nomeArquivoFolha);
+
 #endif
