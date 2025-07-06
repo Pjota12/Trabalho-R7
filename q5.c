@@ -38,7 +38,7 @@ int vencedorGS(char *arqHash, char *arqDados, int ano, int t){
 
     if (iguais) {
         Tplayer *jogador = buscarJogador(id, 0, t);
-        printf("%s venceu os 4 Grand Slams em %d.\n", id, ano);
+        printf("%s %s venceu os 4 Grand Slams em %d.\n", id, jogador->nome, ano);
         return 1;
     }
 
@@ -53,7 +53,7 @@ int main(){
     scanf("%d", &t);
 
     // Para construir a hash
-    //THcamp_ano_construcao("champions.txt","hash_campeonatos_ano.bin","dados_campeonatos_ano.bin");
+    THcamp_ano_construcao("champions.txt","hash_campeonatos_ano.bin","dados_campeonatos_ano.bin");
     
     for (int i = 1990; i < 2025; i++){
         cont += vencedorGS("hash_campeonatos_ano.bin","dados_campeonatos_ano.bin", i, t);
