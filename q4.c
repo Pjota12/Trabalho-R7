@@ -5,7 +5,7 @@
 
 // gcc q4.c THMSranking.h THMSranking.c TABM.c TABM.h TABMaux.c TABMaux.h THMSnome.c THMSnome.h -o q4
 
-#include "THMSranking.h"
+#include "q4.h"
 
 void imprime_ranking_ano(char *arqHash, char *arqDados) {
     
@@ -44,14 +44,10 @@ void imprime_ranking_ano(char *arqHash, char *arqDados) {
     fclose(fd);
 }
 
-int main() {
+void Questao4(int t) {
 
-    int t = 10;
-    printf("t = ");
-    scanf("%d",&t);
-    THranking_construcao("champions.txt","hash_ranking.bin","dados_ranking.bin",t);
+    //THranking_construcao("champions.txt","hash_ranking.bin","dados_ranking.bin",t);
     imprime_ranking_ano("hash_ranking.bin","dados_ranking.bin");
-    return 0;
 }
 
 

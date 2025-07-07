@@ -24,11 +24,11 @@ void THativos_insere(char *arqHash, char *arqDados, char *id) {
     if(ANO_ATUAL - anoNascimento >= 39) {
         hash = 0;
     }
-    printf("%d ",hash);
+    //printf("%d ",hash);
 
     fseek(fh, hash * sizeof(int), SEEK_SET);
     fread(&pos, sizeof(int), 1, fh);
-    printf("%d ",pos);
+    //printf("%d ",pos);
 
     THativos aux;
 
@@ -48,7 +48,7 @@ void THativos_insere(char *arqHash, char *arqDados, char *id) {
 
     THativos elem;
     strcpy(elem.id,id);
-    printf("%s ",elem.id);
+    //printf("%s ",elem.id);
     elem.status = 1;
 
     if(ppl == -1) {
@@ -103,11 +103,11 @@ void THativos_construcao(char *arqPlayers, char *arqHash, char *arqDados) {
         token = strtok(NULL, "\\");
         j.anoNascimento = token ? atoi(token) : -1;
 
-        char id[ID_SIZE];
-        strcpy(id,THnome_busca("hash_nome.bin", "dados_nome.bin", j.nome));
+        char *id;
+        id = THnome_busca("hash_nome.bin", "dados_nome.bin", j.nome);
           
         THativos_insere("hash_ativos.bin","dados_ativos.bin",id);
-
+        free(id); // Libera a memória alocada para o ID do jogador
     }
     
     fclose(fp);

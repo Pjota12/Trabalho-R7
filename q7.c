@@ -2,34 +2,18 @@
 
 //gcc q7.c THMSnacionalidade.h THMSnacionalidade.c THMSativos.h THMSativos.c TABM.h TABM.c TABMaux.h TABMaux.c THMSnome.c THMSnome.h -o q7
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "q7.h"
 
-#include "THMSnacionalidade.h"
-#include "THMSativos.h"
-#include "THMSranking.h"
-#include "THMSativos.h"
-#include "THMScamp.h"
-#include "THMScamp_ano.h"
-#include "THMStemporada.h"
+void Questao7(int t,int *numeroDeJogadores) {
 
-#define ANO_ATUAL 2025
-
-int main() {
-
-    // Para construir
-    THnacionalidade_construcao("tennis_players.txt", "hash_nacionalidade.bin","dados_nacionalidade.bin");
 
     char pais[20], sigla[4];
-    int hash, pos, t, ativos;
+    int hash, pos, ativos;
 
     printf("Insira o pais: ");
-    scanf(" %s",pais);
-    printf("0 - Retirar aposentados\n1 - Retirar ativos");
+    scanf(" %[^\n]",pais);
+    printf("\n0 - Retirar aposentados\n1 - Retirar ativos\n");
     scanf("%d",&ativos);
-    printf("t = ");
-    scanf("%d",&t);
 
     if(!strcmp(pais,"Australia")) strcpy(sigla,"AUT");
     else if(!strcmp(pais,"Belarus")) strcpy(sigla,"BLR");
@@ -51,9 +35,9 @@ int main() {
     fclose(fp);
 
     fp = fopen("dados_nacionalidade.bin","rb");
-    if(!fp) fclose;
+    if(!fp) exit(1);
 
-    while(pos) {
+    while(pos != -1) {
         char nacionalidade[4], strAno[5];
         int ativo = 1, anoNascimento;
         THnacionalidade aux;
@@ -73,29 +57,49 @@ int main() {
         }
         
         if((ativo == ativos) && (!strcmp(nacionalidade,sigla))){
-            // 
+
+
+            printf("Removendo jogador: %s\n", aux.id);
             Tplayer *player;
-            //player = retira arvore aux.id
-            
-            // Remover de todas as hashs
-            THnome_retira("hash_nome.bin","dados_nome.bin",player->nome);
+            player = buscarJogador(aux.id,0,t); // Busca o jogador na árvore B+
+            if(player){
+                free(player); // Libera a memória alocada para o jogador
+                player = Removerjogador("index.bin",aux.id,t,0,0);
+                // Remover de todas as hashs
+                (*numeroDeJogadores)--;
+                printf("\nJogador removido: %s\n", player->nome);
 
-            fclose(fp);
-            THativos_retira("hash_ativos.bin","dados_ativos.bin",aux.id);
-            
-            THnacionalidade_retira("hash_nacionalidade.bin","dados_nacionalidade.bin",aux.id);
-            
-            THranking_retira_id("hash_ranking.bin","dados_ranking.bin",aux.id);
+                printf("retirando hashnome\n");
+                THnome_retira("hash_nome.bin","dados_nome.bin",player->nome);
 
-            THcamp_ano_retira("hash_campeonatos_ano.bin","dados_campeonatos_ano.bin",aux.id);
+                fclose(fp);
+                printf("retirando hashAtivo\n");
+                THativos_retira("hash_ativos.bin","dados_ativos.bin",aux.id);
+                
+                printf("retirando hashNacionalidade\n");
+                THnacionalidade_retira("hash_nacionalidade.bin","dados_nacionalidade.bin",aux.id);
+                
+                printf("retirando hashRanking\n");
+                THranking_retira_id("hash_ranking.bin","dados_ranking.bin",aux.id);
 
-            THcamp_retira("hash_campeonatos.bin","dados_campeonatos.bin",aux.id);
+                printf("retirando hashCampAno\n");
+                THcamp_ano_remove("hash_campeonatos_ano.bin","dados_campeonatos_ano.bin",aux.id);
+
+                printf("retirando hashCamp\n");
+                THcamp_remove("hash_campeonatos.bin","dados_campeonatos.bin",aux.id);
+                
+                printf("retirando hashTemporada\n");
+                THtemporada_retira_id("hash_temporada.bin","dados_temporada.bin",aux.id);
+
+                free(player); // Libera a memória alocada para o jogador
+
+                fp = fopen("dados_nacionalidade.bin","rb");
+            }else{
+                printf("Jogador com id %s não encontrado na árvore B+\n", aux.id);
+            }
             
-            THtemporada_retira_id("hash_temporada.bin","dados_temporada.bin",aux.id);
         }
-        fp = fopen("dados_nacionalidade.bin","rb");
         pos = aux.proximo;
     }
-
-    return 0;
+    fclose(fp);
 }

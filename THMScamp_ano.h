@@ -11,7 +11,7 @@
 #define ID_DESCONHECIDO "UNKNOWN_ID"
 #define VENC_INDETERMINADO "UNDEFINED_WINNER"
 
-typedef struct THcampNode {
+typedef struct THcampanoNode {
     int status;
     char id[ID_SIZE];
     int prox;
@@ -21,9 +21,8 @@ int hash_camp_ano(int ano);
 void THcamp_ano_inicializa(char *arqHash, char *arqDados);
 void THcamp_ano_insere(char *arqHash, char *arqDados, char *id, int ano);
 void THcamp_ano_construcao(char *arqPlayers, char *arqHash, char *arqDados); //constroi hash a partir do arquivo players
-void THcamp_ano_retira(char *arqHash, char *arqDados, char *id);
 char *THcamp_ano_busca(char *arqHash, char *arqDados, char *id, int ano);
-void THcamp_ano_remove(char *arqHash, char *arqDados, char *id, int ano);
+void THcamp_ano_remove(char *arqHash, char *arqDados, char *id);
 char *THcamp_ano_busca_sobrenome(char *tabHash, char *dados, char *sobrenome);
 
 #endif

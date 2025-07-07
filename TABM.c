@@ -36,6 +36,7 @@ Tnode* criaNo(int T) {
 }
 
 void liberaNo(Tnode *no, int T) {
+    if (!no) return;
     for (int i = 0; i < (2 * T - 1); i++) free(no->keys[i]);
     for (int i = 0; i < (2 * T); i++) free(no->filhos[i]);
     free(no->keys);
@@ -64,12 +65,14 @@ Tnode* lerNo(FILE *fi, int T) {
     if (fread(&node->isOcuped, sizeof(int), 1, fi) != 1 ||
         fread(&node->numKeys, sizeof(int), 1, fi) != 1) {
         printf("Erro ao ler os campos primitivos do nó.\n");
+        liberaNo(node, T); // Libera a memória alocada para o nó
         return NULL;
     }
 
     for (int i = 0; i < 2 * T - 1; i++) {
         if (fread(node->keys[i], sizeof(char), ID_SIZE, fi) != ID_SIZE) {
             printf("Erro ao ler as chaves do nó.\n");
+            liberaNo(node, T); // Libera a memória alocada para o nó
             return NULL;
         }
     }
@@ -77,6 +80,7 @@ Tnode* lerNo(FILE *fi, int T) {
     for (int i = 0; i < 2 * T; i++) {
         if (fread(node->filhos[i], sizeof(char), ARQ_SIZE, fi) != ARQ_SIZE) {
             printf("Erro ao ler os filhos do nó.\n");
+            liberaNo(node, T); // Libera a memória alocada para o nó
             return NULL;
         }
     }
@@ -284,6 +288,7 @@ void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n,int T){
     printf("numKeys do FilhoMenor: %d\n", FilhoMenor->numKeys);
     printChaves(FilhoMenor); // Imprime as chaves do nó FilhoMenor
     printFilhos(FilhoMenor); // Imprime os filhos do nó FilhoMenor
+
     liberaNo(FilhoMenor,T); // Libera a memória alocada para o nó FilhoMenor
     //-------------------------------------------------------------
 
@@ -307,6 +312,7 @@ void DivideNoRaiz(char *nomeArqIndex,Tnode *noDividido,int n,int T){
     printf("numKeys do FilhoMenor: %d\n", FilhoMenor->numKeys);
     printChaves(FilhoMaior); // Imprime as chaves do nó FilhoMaior
     printFilhos(FilhoMaior); // Imprime os filhos do nó FilhoMaior
+
     liberaNo(FilhoMaior,T); // Libera a memória alocada para o nó FilhoMaior
     //-------------------------------------------------------------
 
@@ -619,7 +625,7 @@ void imprimirArvoreB(int T){
 // - Um ponteiro para a estrutura Tplayer contendo os dados do jogador, ou NULL se não encontrado.
 // Observação: NA CHAMADA DA FUNÇÃO O n DEVE SER 0 para acesssar o primeiro nó da árvore B+
 Tplayer *buscarJogador(char *id,int n,int T) {
-    printf("Buscando jogador com ID: %s\n", id);
+    //printf("Buscando jogador com ID: %s\n", id);
     if (id == NULL || n < 0) {
         printf("ID inválido ou índice negativo.\n");
         return NULL;
@@ -639,9 +645,9 @@ Tplayer *buscarJogador(char *id,int n,int T) {
         i++;
     }
 
-    printf("Chave a ser buscada: %i\n", i);
+    //printf("Chave a ser buscada: %i\n", i);
     if(strncmp(node->filhos[i], "leaf", 4) == 0) { // Se for uma folha de valores (significa que é um nó folha)
-        printf("Buscando jogador na folha: %s\n", node->filhos[i]);
+        //printf("Buscando jogador na folha: %s\n", node->filhos[i]);
         // filhos[i] aqui contém nome do arquivo da folha 
         fclose(fi);
         Tplayer *jogador = buscaBinariaJogadorNaFolha(node->filhos[i], id);
@@ -653,7 +659,7 @@ Tplayer *buscarJogador(char *id,int n,int T) {
     char nomeFilho[ARQ_SIZE];
     strcpy(nomeFilho, node->filhos[i]);
     int nextNodeIndex = atoi(nomeFilho);
-    printf("Próximo nó: %s\n", nomeFilho);
+    //printf("Próximo nó: %s\n", nomeFilho);
 
     liberaNo(node,T); // Libera a memória alocada para o nó
     fclose(fi);
@@ -666,7 +672,7 @@ Tplayer *buscarJogador(char *id,int n,int T) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 Tplayer *Retirafolha(char *nomeArqFolha, char *id){
-    Tplayer *playerRetirado = malloc(sizeof(Tplayer)); // Aloca memória para o jogador
+    Tplayer *playerRetirado;
     playerRetirado = buscaBinariaJogadorNaFolha(nomeArqFolha, id); // Busca o jogador com o ID especificado na folha
     if(playerRetirado == NULL) { // Se o jogador não for encontrado
         printf("Jogador com ID %s não encontrado na folha %s.\n", id, nomeArqFolha);
@@ -772,7 +778,7 @@ Tplayer *Caso3aFolha(char *nomeArqFolha, char *id, char **idPromovido, char *fol
 }
 
 Tplayer *Caso3bFolha (char *nomeArqFolha, char *id, char *folhaIrmao, int PosicaoFolhaIrmao) {
-    Tplayer *playerRetirado = malloc(sizeof(Tplayer)); // Aloca memória para o jogador
+    Tplayer *playerRetirado;
     playerRetirado = Retirafolha(nomeArqFolha, id); // Remove o jogador com o ID especificado da folha atual
 
     if(PosicaoFolhaIrmao == 1){//FOLHA IRMA DIREITA
@@ -893,18 +899,18 @@ Tplayer *Caso3bFolha (char *nomeArqFolha, char *id, char *folhaIrmao, int Posica
 
 //caso 3B no interno
 //erro no retira chave promovida
-void Caso3aNoInterno(char *nomeArqIndex,int ofsetFilho, int ofsetIrmão,char **chavePromovida,int T,int PosicaoNoIrmao) {
+void Caso3aNoInterno(char *nomeArqIndex,int ofsetFilho, int ofsetIrmao,char **chavePromovida,int T,int PosicaoNoIrmao) {
     //O CHAVE PROMOVIDA INICIALMENTE E A CHAVE DO PAI QUE VAI DESCER PARA O FILHO DPS SERA ALTERADA PARA A CHAVE DO PAI
     if(PosicaoNoIrmao == 1){//Irmao a direita do no filho
-        printf("Caso 3A IRMAO A DIREITA: No filho %d e no irmao %d\n", ofsetFilho, ofsetIrmão);
+        printf("Caso 3A IRMAO A DIREITA: No filho %d e no irmao %d\n", ofsetFilho, ofsetIrmao);
         FILE *fi = fopen(nomeArqIndex, "rb+");
         if (fi == NULL) {
             printf("Erro ao abrir o arquivo de índice.\n");
             exit(1);
         }
 
-        fseek(fi, (ofsetIrmão * tamanhoNo(T))+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó irmão
-        Tnode *noIrmao = lerNo(fi,T); // Lê o nó irmão do arquivo de índice
+        fseek(fi, (ofsetIrmao * tamanhoNo(T))+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó irmao
+        Tnode *noIrmao = lerNo(fi,T); // Lê o nó irmao do arquivo de índice
         fseek(fi, (ofsetFilho * tamanhoNo(T))+sizeof(int), SEEK_SET); // Move o ponteiro do arquivo para o nó filho
         Tnode *noFilho = lerNo(fi,T); // Lê o nó filho
         if (noIrmao == NULL || noFilho == NULL) {
@@ -916,41 +922,41 @@ void Caso3aNoInterno(char *nomeArqIndex,int ofsetFilho, int ofsetIrmão,char **c
         //alterando no filho(passando a chave do pai para o filho)
         noFilho->numKeys++; // Incrementa o número de chaves no nó filho
         strcpy(noFilho->keys[noFilho->numKeys - 1], *chavePromovida); // Insere a chave promovida no nó filho
-        strcpy(noFilho->filhos[noFilho->numKeys], noIrmao->filhos[0]); // Insere o primeiro filho do nó irmão no nó filho
+        strcpy(noFilho->filhos[noFilho->numKeys], noIrmao->filhos[0]); // Insere o primeiro filho do nó irmao no nó filho
         noFilho->isOcuped = 1; // Marca o nó filho como ocupado
         //salvando o filho
         fseek(fi, (ofsetFilho * tamanhoNo(T)) + sizeof(int), SEEK_SET); // Move
         salvarNo(fi, noFilho,T); // Salva o nó filho atualizado no arquivo de índice
 
         //alterando no irmao
-        strcpy(*chavePromovida, noIrmao->keys[0]); // Copia a primeira chave do nó irmão para a chave promovida
+        strcpy(*chavePromovida, noIrmao->keys[0]); // Copia a primeira chave do nó irmao para a chave promovida
 
         for(int i = 0; i < noIrmao->numKeys; i++){
-            if(i != noIrmao->numKeys - 1) // Se não for a última chave
+            if(i != noIrmao->numKeys - 1) // Se nao for a última chave
                 strcpy(noIrmao->keys[i], noIrmao->keys[i + 1]); // Move as chaves para a esquerda
 
             strcpy(noIrmao->filhos[i], noIrmao->filhos[i + 1]); // Move os filhos para a esquerda
         }
 
-        noIrmao->numKeys--; // Decrementa o número de chaves no nó irmão
-        noIrmao->isOcuped = 1; // Marca o nó irmão como ocupado
+        noIrmao->numKeys--; // Decrementa o número de chaves no nó irmao
+        noIrmao->isOcuped = 1; // Marca o nó irmao como ocupado
         //salvando o irmao
-        fseek(fi, (ofsetIrmão * tamanhoNo(T))+sizeof(int), SEEK_SET); //
-        salvarNo(fi, noIrmao,T); // Salva o nó irmão atualizado no arquivo de índice
+        fseek(fi, (ofsetIrmao * tamanhoNo(T))+sizeof(int), SEEK_SET); //
+        salvarNo(fi, noIrmao,T); // Salva o nó irmao atualizado no arquivo de índice
         liberaNo(noFilho,T); // Libera a memória alocada para o nó filho
         liberaNo(noIrmao,T); // Libera a memória alocada para o nó
         fclose(fi); // Fecha o arquivo de índice
-        printf("Caso 3A concluído: Nó filho atualizado com a chave promovida e o filho do nó irmão.\n");
+        printf("Caso 3A concluído: Nó filho atualizado com a chave promovida e o filho do nó irmao.\n");
         return;
-    }else{ // irmão à esquerda do filho
-        printf("Caso 3A IRMAO A ESQUERDA: No filho %d e no irmao %d\n", ofsetFilho, ofsetIrmão);
+    }else{ // irmao à esquerda do filho
+        printf("Caso 3A IRMAO A ESQUERDA: No filho %d e no irmao %d\n", ofsetFilho, ofsetIrmao);
         FILE *fi = fopen(nomeArqIndex, "rb+");
         if (fi == NULL) {
             printf("Erro ao abrir o arquivo de índice.\n");
             exit(1);
         }
 
-        fseek(fi, (ofsetIrmão * tamanhoNo(T)) + sizeof(int), SEEK_SET);
+        fseek(fi, (ofsetIrmao * tamanhoNo(T)) + sizeof(int), SEEK_SET);
         Tnode *noIrmao = lerNo(fi,T);
         fseek(fi, (ofsetFilho * tamanhoNo(T)) + sizeof(int), SEEK_SET);
         Tnode *noFilho = lerNo(fi,T);
@@ -977,7 +983,7 @@ void Caso3aNoInterno(char *nomeArqIndex,int ofsetFilho, int ofsetIrmão,char **c
             strcpy(noFilho->keys[i + 1], noFilho->keys[i]);
         }
 
-        // Insere chave promovida e ponteiro do irmão
+        // Insere chave promovida e ponteiro do irmao
         strcpy(noFilho->keys[0], *chavePromovida);
         strcpy(noFilho->filhos[0], noIrmao->filhos[noIrmao->numKeys]);
 
@@ -987,21 +993,21 @@ void Caso3aNoInterno(char *nomeArqIndex,int ofsetFilho, int ofsetIrmão,char **c
         // Atualiza chave promovida para o pai
         strcpy(*chavePromovida, novaPromovida);
 
-        // Remove chave e ponteiro do irmão
+        // Remove chave e ponteiro do irmao
         noIrmao->numKeys--;
         noIrmao->isOcuped = 1;
 
         // Salva
         fseek(fi, (ofsetFilho * tamanhoNo(T)) + sizeof(int), SEEK_SET);
         salvarNo(fi, noFilho, T);
-        fseek(fi, (ofsetIrmão * tamanhoNo(T)) + sizeof(int), SEEK_SET);
+        fseek(fi, (ofsetIrmao * tamanhoNo(T)) + sizeof(int), SEEK_SET);
         salvarNo(fi, noIrmao, T);
 
         liberaNo(noFilho, T);
         liberaNo(noIrmao, T);
         fclose(fi);
 
-        printf("Caso 3A concluído (irmão à esquerda): nó filho atualizado com chave promovida e ponteiro do irmão.\n");
+        printf("Caso 3A concluído (irmao à esquerda): nó filho atualizado com chave promovida e ponteiro do irmão.\n");
         return;
     }   
 }
@@ -1163,6 +1169,7 @@ void Caso3bNoInterno(char *nomeArqIndex,int ofsetEsquerda, int ofsetDireita, int
     printf("Caso 3B concluído: Nó esquerdo atualizado com a chave despromovida e os filhos do nó direito.\n");
 }
 
+//caso 3B no interno
 Tplayer *Removerjogador(char *nomeArqIndex, char *id, int T,int atual, int Pai) {
     printf("Removendo jogador com ID: %s\n", id);
     FILE *fi = fopen(nomeArqIndex, "rb+"); // Abre o arquivo de índice para leitura e escrita
@@ -1385,7 +1392,7 @@ Tplayer *Removerjogador(char *nomeArqIndex, char *id, int T,int atual, int Pai) 
                 strcpy(chavePromovida, nodePai->keys[i-1]); // Copia a chave do pai para a chave promovida
             } // Copia a chave do pai para a chave promovida
             fclose(fi); // Fecha o arquivo de índice
-            Caso3aNoInterno(nomeArqIndex, ofsetFilho, ofsetIrmao, &chavePromovida, T, posicaoIrmao-i); // Chama a função para o caso 3A
+            Caso3aNoInterno(nomeArqIndex, ofsetFilho, ofsetIrmao, &chavePromovida, T, posicaoIrmao-i); // Chama a função para o caso 3A irmão
             fi = fopen(nomeArqIndex, "rb+"); // Reabre o arquivo de índice para escrita
             if (fi == NULL) {
                 printf("Erro ao abrir o arquivo de índice.\n");
@@ -1471,8 +1478,9 @@ void KillArvoreBaux(char *nomeArqIndex,int T) {
                 printf("Removendo folha: %s\n", node->filhos[i]);
                 killFolha(node->filhos[i]); // Mata a folha correspondente
             }
-
+            
         }
+        liberaNo(node,T); // Libera a memória alocada para o nó
     }
 
     fclose(fi); // Fecha o arquivo de índice

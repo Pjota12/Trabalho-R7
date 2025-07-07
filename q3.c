@@ -2,18 +2,8 @@
 
 //gcc q3.c THMSativos.h THMSativos.c TABM.h TABM.c TABMaux.h TABMaux.c THMSnome.c THMSnome.h -o q3
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "q3.h"
 
-#include "THMSativos.h"
-#include "TABM.h"
-
-typedef struct TLDE_tenistas {
-    char nome[50];
-    int pont;
-    struct TLDE_tenistas *prox;
-}TLDETEN;
 
 void imprime_jogadores(TLDETEN* jogadores) {
     printf("\nLista de jogadores: \n");
@@ -61,18 +51,15 @@ TLDETEN *insere_ordenado(TLDETEN *lista, Tplayer *player) {
     return lista;
 }
 
-int main() {
+void Questao3(int t) {
 
     // Para construir a hash
-    THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
+    //THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
 
     FILE *fh = fopen("hash_ativos.bin","rb"), *fp = fopen("dados_ativos.bin","rb");
     if((!fh) || (!fp)) exit(1);
-    int pos, t = 10;
-
-    printf("t = ");
-    scanf("%d",&t);
-
+    int pos;
+    
     fread(&pos,sizeof(int),1,fh);
 
     TLDETEN *listaTLDETEN = NULL;
@@ -84,7 +71,8 @@ int main() {
         if(aux.status) {
             Tplayer *player = buscarJogador(aux.id,0,t);
     
-            listaTLDETEN = insere_ordenado(listaTLDETEN, player);    
+            listaTLDETEN = insere_ordenado(listaTLDETEN, player);
+            free(player);  
         }
         pos = aux.proximo;
     }
@@ -98,13 +86,14 @@ int main() {
         if(aux.status) {
             Tplayer *player = buscarJogador(aux.id,0,10);
     
-            listaTLDETEN = insere_ordenado(listaTLDETEN, player);    
+            listaTLDETEN = insere_ordenado(listaTLDETEN, player);
+            free(player);    
         }
         pos = aux.proximo;
     }
 
     imprime_jogadores(listaTLDETEN);
     libera(listaTLDETEN);
-
-    return 0;
+    fclose(fh);
+    fclose(fp);
 }

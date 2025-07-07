@@ -3,27 +3,18 @@
 
 // gcc q9.c THMScamp.h THMScamp.c TABM.h TABM.c TABMaux.h TABMaux.c -o q9
 
-#include "TABM.h"
-#include "TABMaux.h"
-#include "THMScamp.h"
+#include "q9.h"
 
-typedef struct PlayerTitulos {
-    char id[ID_SIZE];
-    char nome[50];
-    int cont;
-    struct PlayerTitulos *prox;
-} PlayerTitulos;
-
-void imprime_jogadores(PlayerTitulos* jogadores) {
-    PlayerTitulos* aux = jogadores;
+void imprime_jogadores9(PlayerTitulos9* jogadores) {
+    PlayerTitulos9* aux = jogadores;
     while (aux){
         printf("%s: %d \n", aux->nome, aux->cont);
         aux = aux->prox;
     }
 }
 
-void libera_titulos(PlayerTitulos *jogadores) { // libera a lista
-    PlayerTitulos *temp;
+void libera_titulos9(PlayerTitulos9 *jogadores) { // libera a lista
+    PlayerTitulos9 *temp;
     while (jogadores){
         temp = jogadores;
         jogadores = jogadores->prox;
@@ -31,33 +22,33 @@ void libera_titulos(PlayerTitulos *jogadores) { // libera a lista
     }
 }
 
-PlayerTitulos *insere_titulos_ordenado(PlayerTitulos *lista, Tplayer *player, char *id, int cont) {
-    PlayerTitulos *playerTitulos = (PlayerTitulos *)malloc(sizeof(PlayerTitulos));
+PlayerTitulos9 *insere_titulos_ordenado9(PlayerTitulos9 *lista, Tplayer *player, char *id, int cont) {
+    PlayerTitulos9 *playerTitulos9 = (PlayerTitulos9 *)malloc(sizeof(PlayerTitulos9));
 
-    strcpy(playerTitulos->id, id);
-    strcpy(playerTitulos->nome, player->nome);
-    playerTitulos->cont = cont;
+    strcpy(playerTitulos9->id, id);
+    strcpy(playerTitulos9->nome, player->nome);
+    playerTitulos9->cont = cont;
 
-    PlayerTitulos *aux = lista, *ant = NULL;
-    while((aux) && (playerTitulos->cont < aux->cont)) {
+    PlayerTitulos9 *aux = lista, *ant = NULL;
+    while((aux) && (playerTitulos9->cont < aux->cont)) {
         ant = aux;
         aux = aux->prox;
     }
     
-    if((aux) && (playerTitulos->cont == aux->cont)) {
-        while((aux) && (strcmp(playerTitulos->nome, aux->nome) > 0)) {
+    if((aux) && (playerTitulos9->cont == aux->cont)) {
+        while((aux) && (strcmp(playerTitulos9->nome, aux->nome) > 0)) {
             ant = aux;
             aux = aux->prox;
         }
     }
 
     if((!lista) || (!ant)) { // insere no inicio
-        playerTitulos->prox = lista;
-        lista = playerTitulos;
+        playerTitulos9->prox = lista;
+        lista = playerTitulos9;
     }
     else { // meio ou fim
-        playerTitulos->prox = ant->prox;
-        ant->prox = playerTitulos;
+        playerTitulos9->prox = ant->prox;
+        ant->prox = playerTitulos9;
     }
     return lista;
 }
@@ -85,7 +76,7 @@ int contaTitulos(FILE *fd, char *arqHash, int coluna, char *id){
     return cont;
 }
 
-int checaRep(PlayerTitulos *lista, char *id) {
+int checaRep(PlayerTitulos9 *lista, char *id) {
     while (lista) {
         if (strcmp(lista->id, id) == 0) return 1;
         lista = lista->prox;
@@ -93,11 +84,11 @@ int checaRep(PlayerTitulos *lista, char *id) {
     return 0;
 }
 
-void percorreCamp(char *arqHash, char *arqDados, int coluna, int t){
+void percorreCamp9(char *arqHash, char *arqDados, int coluna, int t){
     FILE *fp = fopen(arqHash, "rb");
     if(!fp) exit(1);
     
-    PlayerTitulos *lista = NULL;
+    PlayerTitulos9 *lista = NULL;
 
     int hash = hash_camp(coluna), pos, cont = 0;
 
@@ -112,34 +103,30 @@ void percorreCamp(char *arqHash, char *arqDados, int coluna, int t){
         THcamp aux;
         fseek(fp,pos,SEEK_SET);
         fread(&aux,sizeof(THcamp),1,fp);
-        Tplayer *jogador = buscarJogador(aux.id,0,t);
-        cont = contaTitulos(fp, arqHash, coluna, aux.id);
-        if (!checaRep(lista, aux.id)) lista = insere_titulos_ordenado(lista, jogador, aux.id, cont);    
+        if(aux.status) { // se o status for 0, pula para o próximo
+            Tplayer *jogador = buscarJogador(aux.id,0,t);
+            cont = contaTitulos(fp, arqHash, coluna, aux.id);
+            if (!checaRep(lista, aux.id)) lista = insere_titulos_ordenado9(lista, jogador, aux.id, cont);    
+            free(jogador); // libera a memória alocada para o jogador
+        }    
         pos = aux.prox;
     }
 
-    imprime_jogadores(lista);
-    libera_titulos(lista);
+    imprime_jogadores9(lista);
+    libera_titulos9(lista);
 
     fclose(fp);
 }
 
-int main() {
+void Questao9(int t) {
 
     // Para construir a hash
     //THcamp_construcao("tennis_players.txt","hash_campeonatos.bin","dados_campeonatos.bin");
-
-    int t;
-
-    printf("t = ");
-    scanf("%d",&t);
 
     char *nomes_torneios[15] = {"Australian Open", "Roland Garros", "Wimbledon", "US Open", "ATP Finals", "Olimpíadas", "Indian Wells", "Miami", "Monte Carlo", "Madrid", "Rome", "Canada", "Cincinnati", "Shanghai", "Paris"};
 
     for (int i = 0; i < 15; i++){
         printf("\n%s: \n", nomes_torneios[i]);
-        percorreCamp("hash_campeonatos.bin", "dados_campeonatos.bin", i, t);
+        percorreCamp9("hash_campeonatos.bin", "dados_campeonatos.bin", i, t);
     }
-
-    return 0;
 }

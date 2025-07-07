@@ -12,7 +12,7 @@
 //     int pontosTotais;       //pontos totais
 //     int quantidadeTorneios[15]; // grand slams = [0] - [3] | [4] ATP Finals | [5] Olimpiadas | [6-14] ATP 1000
 // }Tplayer;
-void maiuscula(char *str) {
+void maiusculaP(char *str) {
     while (*str) {
         *str = toupper((unsigned char)*str);
         str++;
@@ -116,6 +116,7 @@ void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char 
         j.anoMorte = (token && strcmp(token, "-") != 0) ? atoi(token) : -1;
 
         token = strtok(NULL, "\\");
+        
         // if (token) strncpy(j.nacionalidade, token,3);
         if (token) {
             char nacionalidade[20];
@@ -126,7 +127,7 @@ void LerEscreverJogadoresArvore(char *nomeIndex,char *nomeArquivoJogadores,char 
             else if(!strcmp(nacionalidade,"Greece")) strcpy(j.nacionalidade,"GRC");
             else {
                 strncpy(j.nacionalidade, token,3);
-                maiuscula(j.nacionalidade); // Converte nacionalidade para maiúsculas
+                maiusculaP(j.nacionalidade); // Converte nacionalidade para maiúsculas
             }
         }
 

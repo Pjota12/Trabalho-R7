@@ -1,7 +1,4 @@
-#include "THMSranking.h"
-#include "THMSnacionalidade.h"
-#include "THMScamp.h"
-#include "TABM.h"
+#include "q2.h"
 
 /*2- hash de nacionalidade que informe o id do jogador(MEMORIA SECUNDARIA) -> ja tem o nascimento no id -> procura jogadores na mesma hash 
 que possuem rank e, se ganhou um grandslan no ano respectivo do nascimento*/
@@ -43,10 +40,11 @@ void buscarCompatriotas(char *arqHash, char *arqDados, char* nacionalidade, int 
         strncpy(nac_aux,&aux.id[5],3);
         nac_aux[3] = '\0';
 
-        if((atoi(anoNasc) == ano) && (!strcmp(nacionalidade,nac_aux))){
+        if((atoi(anoNasc) == ano) && (!strcmp(nacionalidade,nac_aux)) && (aux.status)) {
             Tplayer *jogador = buscarJogador(aux.id, 0, t);
             printf("%s %s nasceu em %d\n", aux.id, jogador->nome, ano);
             achou = 1;
+            free(jogador);
         }
         pos = aux.proximo;
     }
@@ -56,7 +54,7 @@ void buscarCompatriotas(char *arqHash, char *arqDados, char* nacionalidade, int 
     fclose(fp);
 }
 
-void percorreRank(char *arqHash, char *arqDados, char* id, int ano, int t){
+/*void percorreRank(char *arqHash, char *arqDados, char* id, int ano, int t){
     FILE *fp = fopen(arqHash, "rb");
     if (!fp) exit(1);
     //printf("Hash ranking aberta\n");
@@ -88,7 +86,7 @@ void percorreRank(char *arqHash, char *arqDados, char* id, int ano, int t){
         pos = aux.proximo;
     }
     fclose(fp);
-}
+}*/
 
 void percorreGS(char *arqHash, char *arqDados, int coluna, int t){
     FILE *fp = fopen(arqHash, "rb");
@@ -106,16 +104,20 @@ void percorreGS(char *arqHash, char *arqDados, int coluna, int t){
     THcamp aux;
     while(pos != -1) {
         fseek(fp, pos, SEEK_SET);
+        
         fread(&aux, sizeof(THcamp), 1, fp);
+        if(aux.status) {
+            Tplayer *jogador = buscarJogador(aux.id,0,t);
+            printf("Compatriotas de %s %s:\n ", aux.id, jogador->nome);
         
-        Tplayer *jogador = buscarJogador(aux.id,0,t);
-        printf("Compatriotas de %s %s:\n ", aux.id, jogador->nome);
+            if(jogador->ranking) {
+                char nacionalidade[4];
+                strncpy(nacionalidade,&aux.id[5],3);
+                nacionalidade[3] = '\0';
+                buscarCompatriotas("hash_nacionalidade.bin","dados_nacionalidade.bin", nacionalidade, aux.ano, t);
+            }
         
-        if(jogador->ranking) {
-            char nacionalidade[4];
-            strncpy(nacionalidade,&aux.id[5],3);
-            nacionalidade[3] = '\0';
-            buscarCompatriotas("hash_nacionalidade.bin","dados_nacionalidade.bin", nacionalidade, aux.ano, t);
+            free(jogador);
         }
         
         pos = aux.prox;
@@ -123,12 +125,7 @@ void percorreGS(char *arqHash, char *arqDados, int coluna, int t){
     fclose(fp);
 }
 
-int main(){
-    int t;
-
-    printf("t: ");
-    scanf("%d", &t);
-
+void Questao2(int t){
     // Para construir a hash
     // THcamp_construcao("champions.txt","hash_campeonatos.bin","dados_campeonatos.bin");
 
@@ -139,6 +136,4 @@ int main(){
     for (int i = 0; i < 4; i++){
         percorreGS("hash_campeonatos.bin","dados_campeonatos.bin", i, t);
     }
-
-    return 0;
 }

@@ -21,7 +21,7 @@ void THranking_retira_id(char *arqHash, char *arqDados, char *id) {
     int r, pos;
     r = fread(&pos,sizeof(int),1,fh);
     
-    while(r) {
+    while(r == 1) {
 
         THranking player;
 
@@ -264,45 +264,57 @@ char *THranking_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobren
     FILE *fp = fopen(tabHashNome, "rb");
     if (!fp) exit(1);
 
-    char primeiraLetra = '\0', sobrenomeComp[50];
-    char *ultimoEspaco = strrchr(sobrenome, ' ');
-    if(ultimoEspaco) {
-        primeiraLetra = sobrenome[0];
+    FILE *fd = fopen(dadosNome, "rb");
+    if (!fd) {
+        fclose(fp);
+        exit(1);
     }
-    strcpy(sobrenomeComp, ultimoEspaco ? ultimoEspaco + 1 : sobrenome);
 
-    int pos;
-    char *id = NULL;
+    char nome[50];
+    char inicial = '\0';
+
+    while (*sobrenome && isspace(*sobrenome)) sobrenome++;  // tira espaço no início
+    int len = strlen(sobrenome);
+    while (len > 0 && isspace(sobrenome[len - 1])) sobrenome[--len] = '\0';  // tira espaço no fim
+
+    // Agora: se for "A. Medvedev", separa
+    char *espaco = strchr(sobrenome, ' ');
+    if (espaco && espaco - sobrenome == 2 && sobrenome[1] == '.') {
+        inicial = sobrenome[0];
+        strcpy(nome, espaco + 1);
+    } else {
+        // Caso comum: só o sobrenome (ou composto)
+        strcpy(nome, sobrenome);
+    }
+
+    // Busca na hash
     for (int i = 0; i < TAM_HASH; i++) {
+        int pos;
         fseek(fp, i * sizeof(int), SEEK_SET);
         fread(&pos, sizeof(int), 1, fp);
         if (pos == -1) continue;
 
-        FILE *fd = fopen(dadosNome, "rb");
-        if (!fd) {
-            fclose(fp);
-            exit(1);
-        }
-        THnomeToid jogador;
         while (pos != -1) {
+            THnomeToid jogador;
             fseek(fd, pos, SEEK_SET);
             fread(&jogador, sizeof(THnomeToid), 1, fd);
             if (jogador.status == 1) {
-                // Pega o último "palavra" do nome (o sobrenome)
-                char *ultimo = strrchr(jogador.nome, ' ');
-                const char *sobrenome_jogador = ultimo ? ultimo + 1 : jogador.nome;
-                if (strcasecmp(sobrenome_jogador, sobrenomeComp) == 0) {
-                    if(primeiraLetra) {
-                        if(toupper(jogador.nome[0]) == toupper(primeiraLetra)) {
-                            char *id = malloc(ID_SIZE * sizeof(char));
+                int len_nome = strlen(jogador.nome);
+                int len_sub = strlen(nome);
+
+                if (len_nome >= len_sub &&
+                    strcasecmp(jogador.nome + len_nome - len_sub, nome) == 0) {
+                    
+                    if (inicial) {
+                        if (toupper(jogador.nome[0]) == toupper(inicial)) {
+                            char *id = malloc(ID_SIZE);
                             strcpy(id, jogador.id);
                             fclose(fd);
                             fclose(fp);
                             return id;
                         }
-                    }
-                    else {
-                        char *id = malloc(ID_SIZE * sizeof(char));
+                    } else {
+                        char *id = malloc(ID_SIZE);
                         strcpy(id, jogador.id);
                         fclose(fd);
                         fclose(fp);
@@ -312,8 +324,9 @@ char *THranking_busca_sobrenome(char *tabHashNome, char *dadosNome, char *sobren
             }
             pos = jogador.proximo;
         }
-        fclose(fd);
     }
+
+    fclose(fd);
     fclose(fp);
     return NULL;
 }
@@ -367,8 +380,9 @@ void THranking_construcao(char *arqChampions, char *arqHash, char *arqDados, int
                         Tplayer *playerArv;
                         playerArv = buscarJogador(id,0,t);
                         strcpy(player.nome,playerArv->nome);
+                        free(playerArv);
+                        free(id);
                     }
-                    free(id);
                     
                     player.pontos = pontosPorTorneio[coluna];
                     

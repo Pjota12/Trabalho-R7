@@ -13,4 +13,8 @@
 
 void LerEscreverJogadoresArvore(char *nomeIndex, char *nomeArquivoJogadores, char *nomeArquivoCampeoes,int *numeroDeJogadores,int T);
 
+void geradorIdJogador(char *id,char* nome, int anoNascimento,char *nacionalidade,int numeroJogador);
+
+void maiusculaP(char *str);
+
 #endif // PLAYERS_H

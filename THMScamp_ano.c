@@ -188,6 +188,7 @@ void THcamp_ano_construcao(char *arqChampions, char *arqHash, char *arqDados) {
             coluna++;
         }
     }
+    fclose(fp);
 }
 
 char *THcamp_ano_busca(char *arqHash, char *arqDados, char *id, int ano) {
@@ -222,30 +223,34 @@ char *THcamp_ano_busca(char *arqHash, char *arqDados, char *id, int ano) {
     return "\0";
 }
 
-void THcamp_ano_remove(char *arqHash, char *arqDados, char *id, int ano) {
+void THcamp_ano_remove(char *arqHash, char *arqDados, char *id) {
     FILE *fh = fopen(arqHash, "rb"), *fd = fopen(arqDados, "rb+");
     if (!fh || !fd) exit(1);
 
-    int hash = hash_camp_ano(ano), pos;
+    int r, pos;
+    r = fread(&pos,sizeof(int),1,fh);
 
-    // Busca o início da lista encadeada para o ano
-    fseek(fh, hash * sizeof(int), SEEK_SET);
-    fread(&pos, sizeof(int), 1, fh);
-    fclose(fh);
+    while(r == 1) {
 
-    THcamp_ano aux;
-    while (pos != -1) {
-        fseek(fd, pos, SEEK_SET);
-        fread(&aux, sizeof(THcamp_ano), 1, fd);
+        THcamp_ano player;
 
-        if (strcmp(aux.id, id) == 0 && aux.status == 1) {
-            aux.status = 0; 
+        while(pos != -1) {
             fseek(fd, pos, SEEK_SET);
-            fwrite(&aux, sizeof(THcamp_ano), 1, fd);
-            break;
+            fread(&player,sizeof(THcamp_ano),1,fd);
+
+            if(!strcmp(player.id, id)) {
+                if(player.status) {
+                    player.status = 0;
+                    fseek(fd, pos, SEEK_SET);
+                    fwrite(&player,sizeof(THcamp_ano),1,fd);
+                }
+
+            }
+            pos = player.prox;
         }
-        pos = aux.prox;
+        r = fread(&pos,sizeof(int),1,fh);
     }
+    fclose(fh);
     fclose(fd);
 }
 

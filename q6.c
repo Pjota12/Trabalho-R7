@@ -1,11 +1,9 @@
-#include "THMSranking.h"
-#include "THMSnacionalidade.h"
-#include "THMScamp.h"
-#include "TABM.h"
+
 
 /*6- hash do ranking 25 e hash do campeonato (por carpeonato (4)) -> pecorre o campeonato especifico -> busca o jogador -> busca osanos que ganhou o campeonato e verifica se ele esta no rank ou não em cada ano no vetor*/
 
 // gcc q6.c TABM.h TABM.c TABMaux.h TABMaux.c THMSranking.h THMSranking.c THMScamp.h THMScamp.c -o q6
+#include "q6.h"
 
 void percorreRank(char *arqHash, char *arqDados, char* id, int ano, int t){
     FILE *fp = fopen(arqHash, "rb");
@@ -37,6 +35,7 @@ void percorreRank(char *arqHash, char *arqDados, char* id, int ano, int t){
 
     Tplayer* jogador = buscarJogador(id, 0, t);
     printf("%s %s\n", id, jogador->nome);
+    free(jogador); // libera a memória alocada para o jogador
 }
 
 void percorreCamp(char *arqHash, char *arqDados, int coluna, int t){
@@ -55,16 +54,15 @@ void percorreCamp(char *arqHash, char *arqDados, int coluna, int t){
     while(pos != -1) {
         fseek(fp, pos, SEEK_SET);
         fread(&aux, sizeof(THcamp), 1, fp);
-        percorreRank("hash_ranking.bin", "dados_ranking.bin", aux.id, aux.ano, t);
+        if(aux.status) { // se o status for 0, pula para o próximo
+            percorreRank("hash_ranking.bin", "dados_ranking.bin", aux.id, aux.ano, t);
+        }
         pos = aux.prox;
     }
     fclose(fp);
 }
 
-int main(){
-    int t;
-    printf("t: ");
-    scanf("%d", &t);
+void Questao6(int t){
 
     // Para construir a hash
     // THcamp_construcao("champions.txt","hash_campeonatos.bin","dados_campeonatos.bin");
@@ -86,5 +84,4 @@ int main(){
         }
         percorreCamp("hash_campeonatos.bin","dados_campeonatos.bin", i, t);
     }
-    return 0;
 }

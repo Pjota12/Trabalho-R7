@@ -133,10 +133,11 @@ void THnacionalidade_construcao(char *arqPlayers, char *arqHash, char *arqDados)
         j.nacionalidade[3] = '\0'; // Garante que a string de nacionalidade tenha o tamanho correto
         //printf("%s ",j.nacionalidade);
 
-        char id[ID_SIZE];
-        strcpy(id, THnome_busca("hash_nome.bin", "dados_nome.bin", j.nome));
+        char *id;
+        id = THnome_busca("hash_nome.bin", "dados_nome.bin", j.nome);
 
         THnacionalidade_insere(arqHash, arqDados, id);
+        free(id); // Libera a memória alocada para o ID do jogador
     
     }
 

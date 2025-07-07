@@ -67,13 +67,12 @@ char *THnome_busca(char *tabHash, char *dados, char *nome) {
     if((registro.status == 1) && (strcmp(registro.nome, nome) == 0)) {
       char *id = malloc(ID_SIZE * sizeof(char)); // Aloca memória para o ID
       strcpy(id, registro.id); // Copia o ID do registro encontrado
-      fclose(fp);
       fclose(fd);
       return id; // Retorna o ID se o nome for encontrado
     }
     if(registro.proximo == -1) {
       fclose(fd);
-      return "\0"; // Retorna NULL se não encontrar o nome
+      return NULL; // Retorna NULL se não encontrar o nome
     }
     pos = registro.proximo; // Atualiza a posição para o próximo registro
   }

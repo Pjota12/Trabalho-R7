@@ -115,13 +115,14 @@ int calculaOfsetLogico(char *nomeArquivo,int T){
     while (ftell(fp) < limite && (node = lerNo(fp,T)) != NULL){ // Lê os nós do arquivo de índice
         if (!node->isOcuped) {
             fclose(fp);
+            liberaNo(node,T); // Libera a memória alocada para o nó
             return offset; // Retorna imediatamente o primeiro offset livre
         }
+        liberaNo(node,T); // Libera a memória alocada para o nó
         offset++;
     }
 
     fclose(fp);
-    liberaNo(node,T); // Libera a memória alocada para o nó
     return offset; // Se não achou nenhum livre, retorna o próximo disponível no final
 }
 
@@ -296,12 +297,13 @@ void inserirJogadorNaFolhaOrdenado(char *NomeArqFolha,Tplayer *novoJogador){
             free(player); // Libera a memória alocada para o jogador
             exit(1);
         }
+        free(player); // Libera a memória alocada para o jogador
         printf("Jogador inserido na folha:%s com sucesso.\n",NomeArqFolha);
     }
 }
 
 Tplayer *buscaBinariaJogadorNaFolha(char *nomeArquivoFolha, char *idJogador) {
-    printf("Buscando jogador com ID: %s na folha: %s\n", idJogador, nomeArquivoFolha);
+    //printf("Buscando jogador com ID: %s na folha: %s\n", idJogador, nomeArquivoFolha);
     FILE *ff = fopen(nomeArquivoFolha, "rb");
     if (ff == NULL) {
         printf("Erro ao abrir o arquivo %s.\n", nomeArquivoFolha);
@@ -310,7 +312,7 @@ Tplayer *buscaBinariaJogadorNaFolha(char *nomeArquivoFolha, char *idJogador) {
     Tplayer *player = malloc(sizeof(Tplayer));
     int inicio = 0;
     int fim = contaElementosFolha(nomeArquivoFolha) - 1; //
-    printf("Quantidade de jogadores na folha: %d fim:%d inicio:%d\n", fim + 1,fim,inicio); // Imprime a quantidade de jogadores na folha
+    //printf("Quantidade de jogadores na folha: %d fim:%d inicio:%d\n", fim + 1,fim,inicio); // Imprime a quantidade de jogadores na folha
     while(inicio <= fim){
         int meio = (inicio + fim) / 2; // Calcula o índice do meio
         fseek(ff, meio * sizeof(Tplayer), SEEK_SET); // Move o ponteiro do arquivo para o meio

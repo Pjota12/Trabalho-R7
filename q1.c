@@ -5,25 +5,9 @@
 
 //gcc q1.c THMSativos.h THMSativos.c TABM.h TABM.c TABMaux.h TABMaux.c THMSnome.c THMSnome.h -o q1
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "q1.h"
 
-#include "THMSativos.h"
-#include "TABM.h"
-
-typedef struct PlayerTitulos {
-    char id[ID_SIZE];
-    char nome[50];
-    int grand_slams;
-    int atp_1000;
-    int atp_finals;
-    int olimpiadas;
-    int total_titulos;
-    struct PlayerTitulos *prox;
-} PlayerTitulos;
-
-void imprime_jogadores(PlayerTitulos* jogadores, int aposentado) {
+void imprime_players(PlayerTitulos* jogadores, int aposentado) {
     if (aposentado) printf("\nAposentados:\n\n");
     else printf("\nAtivos: \n\n");
     PlayerTitulos* aux = jogadores;
@@ -103,17 +87,15 @@ PlayerTitulos *insere_titulos_ordenado(PlayerTitulos *lista, Tplayer *player) {
     return lista;
 }
 
-int main() {
+void Questao1(int t) {
 
     // Para construir a hash
-    THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
+    //THativos_construcao("tennis_players.txt","hash_ativos.bin","dados_ativos.bin");
 
     FILE *fp = fopen("hash_ativos.bin","rb");
     if(!fp) exit(1);
-    int hash, pos, t = 10;
+    int hash, pos;
 
-    printf("t = ");
-    scanf("%d",&t);
     printf("0 - aposentados\n1 - ativos\n");
     scanf("%d",&hash);
 
@@ -133,13 +115,14 @@ int main() {
         if(aux.status) {
             Tplayer *player = buscarJogador(aux.id,0,t);
     
-            listaPlayerTitulos = insere_titulos_ordenado(listaPlayerTitulos, player);    
+            listaPlayerTitulos = insere_titulos_ordenado(listaPlayerTitulos, player);
+            free(player);    
         }
         pos = aux.proximo;
+
     }
     
-    imprime_jogadores(listaPlayerTitulos, !hash);
+    imprime_players(listaPlayerTitulos, !hash);
     libera_titulos(listaPlayerTitulos);
-
-    return 0;
+    fclose(fp);
 }
